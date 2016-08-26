@@ -9,7 +9,7 @@ Meehelpen
 
 Je vindt een foutje of je wenst iets van leerstof toe te voegen. Super! Stuur me een mailtje en we brengen het in orde.
 
-Het meest flexibel zou zijn als je rechtstreeks de wijzigingen kan aanbrengen. De twee belangrijkste gebruikte technologieën zijn *git* en *latex*, daarnaast wordt nog gebruik gemaakt van een aantal hulpen:
+Het meest flexibel zou zijn als je rechtstreeks de wijzigingen kan aanbrengen. De twee belangrijkste gebruikte technologieën zijn *git* en *latex*, daarnaast wordt nog gebruik gemaakt van een aantal extra hulpmiddelen:
 
 git
 : Een extreem krachtig versie controle systeem. Dit systeem biedt de mogelijkheid om met verschillende mensen aan verschillende documenten tegelijk te werken. Dit programma moet geïnstalleerd worden op je computer.
