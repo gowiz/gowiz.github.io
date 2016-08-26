@@ -11,4 +11,4 @@ Er bestaat reeds heel wat goed leermateriaal voor het middelbaar wiskundeonderwi
 * **Wiskundige Basisvaardigheden** van _Gert Sonck_, _Wolfgang Jacquet_ en _Tom Dorissen_
 * **Argument** van _Edward Jennekens_
 
-Sommige van de beste oefeningen in de cursussen komen dan ook uit bovenstaande bronnen. Onze leerlingen gebruiken ook de boeken van Argument als verdieping voor thuis.
+Sommige van de beste oefeningen in de cursussen komen dan ook uit bovenstaande bronnen. Onze leerlingen gebruiken de boeken van Argument als verdieping voor thuis.

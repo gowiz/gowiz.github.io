@@ -33,6 +33,16 @@ li {
     line-height: 1.2em;
     color: #333;
 }
+dt {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #222;
+}
+dd {
+    font-size: 1.2em;
+    font-weight: normal;
+    color: #444;
+}
 footer {
     border-top: 1px solid #d5d5d5;
     font-size: .8em;
