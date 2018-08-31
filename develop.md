@@ -25,6 +25,11 @@ Eenmaal alles in orde is kan je een _repo_ _clonen_. Dit doe je als volgt:
 ```
 git clone git@github.com:gowiz/tso-3gr-2u-2005-069.git
 ```
+of
+```
+git clone git@github.com:gowiz/aso-3gr-3u2u-2006-059.git
+```
+
 
 Nu is het mogelijk om wijzigingen aan te brengen en me een _pull request_ te sturen.
 

@@ -56,3 +56,11 @@ ul.posts {
 ul.posts li {
     list-style: none;
 }
+table {
+    width: 70%;
+}
+
+th {
+    height: 50px;
+}
+tr:nth-child(even) {background-color: #f2f2f2;}
