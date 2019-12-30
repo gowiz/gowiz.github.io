@@ -29,6 +29,10 @@ of
 ```
 git clone git@github.com:gowiz/aso-3gr-3u2u-2006-059.git
 ```
+of
+```
+git clone git@github.com:gowiz/BIS-Basis.git
+```
 
 
 Nu is het mogelijk om wijzigingen aan te brengen en me een _pull request_ te sturen.
