@@ -12,15 +12,15 @@ Cursussen wiskunde
 ----------------
 Deze cursussen volgen de leerplannen wiskunde van het GO! (2005-069) voor de technische richtingen met 2 uur wiskunde.
 
-| 1.1 Reële Functies             | [theorie]({{page.tso}}/0101_ReeleFuncties.pdf)             | [oefeningen]({{page.tso}}/0101_ReeleFuncties_Oefeningen.pdf)               |
-| 1.2 Veeltermfuncties           | [theorie]({{page.tso}}/0102_Veeltermfuncties.pdf)          | [oefeningen]({{page.tso}}/0102_Veeltermfuncties_Oefeningen.pdf)            |
-| 1.3 Rationale Functies         | [theorie]({{page.tso}}/0103_RationaleFuncties.pdf)         | [oefeningen]({{page.tso}}/0103_RationaleFuncties_Oefeningen.pdf)           |
-| 1.4 Goniometrische Functies    | [theorie]({{page.tso}}/0104_GoniometrischeFuncties.pdf)    |                                                                            |
-| 1.5 Exponentiële Functies      | [theorie]({{page.tso}}/0105_exponentieleFuncties.pdf)      | [oefeningen]({{page.tso}}/0105_exponentieleFuncties_Oefeningen.pdf)        |
-| 2.1 Telproblemen               | [theorie]({{page.tso}}/0201_Telproblemen.pdf)              | [oefeningen]({{page.tso}}/0201_Telproblemen_Oefeningen.pdf)                |
-| 2.2 Kansrekening               | [theorie]({{page.tso}}/0202_Kansrekening.pdf)              | [oefeningen]({{page.tso}}/0202_Kansrekening_Oefeningen.pdf)                |
-| 2.3.1 Beschrijvende Statistiek | [theorie]({{page.tso}}/020301_BeschrijvendeStatistiek.pdf) | [oplossingen]({{page.tso}}/020301_BeschrijvendeStatistiek_Oplossingen.pdf) |
-| 2.3.2 Normale Verdeling        | [theorie]({{page.tso}}/020302_NormaleVerdeling.pdf)        |                                                                            |
+| 1.1 Reële Functies             | [theorie]({{page.tso}}/0101_ReeleFuncties.pdf)             | [oefeningen]({{page.tso}}/0101_ReeleFuncties_Oefeningen.pdf)        |                                                                            |
+| 1.2 Veeltermfuncties           | [theorie]({{page.tso}}/0102_Veeltermfuncties.pdf)          | [oefeningen]({{page.tso}}/0102_Veeltermfuncties_Oefeningen.pdf)     |                                                                            |
+| 1.3 Rationale Functies         | [theorie]({{page.tso}}/0103_RationaleFuncties.pdf)         | [oefeningen]({{page.tso}}/0103_RationaleFuncties_Oefeningen.pdf)    |                                                                            |
+| 1.4 Goniometrische Functies    | [theorie]({{page.tso}}/0104_GoniometrischeFuncties.pdf)    |                                                                     |                                                                            |
+| 1.5 Exponentiële Functies      | [theorie]({{page.tso}}/0105_exponentieleFuncties.pdf)      | [oefeningen]({{page.tso}}/0105_exponentieleFuncties_Oefeningen.pdf) |                                                                            |
+| 2.1 Telproblemen               | [theorie]({{page.tso}}/0201_Telproblemen.pdf)              | [oefeningen]({{page.tso}}/0201_Telproblemen_Oefeningen.pdf)         |                                                                            |
+| 2.2 Kansrekening               | [theorie]({{page.tso}}/0202_Kansrekening.pdf)              | [oefeningen]({{page.tso}}/0202_Kansrekening_Oefeningen.pdf)         |                                                                            |
+| 2.3.1 Beschrijvende Statistiek | [theorie]({{page.tso}}/020301_BeschrijvendeStatistiek.pdf) |                                                                     | [oplossingen]({{page.tso}}/020301_BeschrijvendeStatistiek_Oplossingen.pdf) |
+| 2.3.2 Normale Verdeling        | [theorie]({{page.tso}}/020302_NormaleVerdeling.pdf)        |                                                                     |                                                                            |
 
 
 3de graad ASO 3/5u
