@@ -37,12 +37,12 @@ Deze cursussen volgen de leerplannen wiskunde van het GO! (2006-059) voor de mod
 | 1.6.u Goniometrische Formules            | [theorie]({{page.aso}}/0106U_GoniometrischeFormules.pdf)          | [oefeningen]({{page.aso}}/0106U_GoniometrischeFormules_Oefeningen.pdf)          |
 | 1.7 Exponentiële Functies                |                                                                   | [oefeningen]({{page.aso}}/0107_ExponentieleFuncties_Oefeningen.pdf)             |
 | 1.8 Logaritmische Functies               | [theorie]({{page.aso}}/0108_LogaritmischeFuncties.pdf)            | [oefeningen]({{page.aso}}/0108_LogaritmischeFuncties_Oefeningen.pdf)            |
-| 1.9 Irrationale Functies                 | [theorie]({{page.aso}}/0108_Irrationalefuncties.pdf)              | [oefeningen]({{page.aso}}/0109_IrrationaleFuncties_Oefeningen.pdf)              |
+| 1.9 Irrationale Functies                 | [theorie]({{page.aso}}/0109_IrrationaleFuncties.pdf)              | [oefeningen]({{page.aso}}/0109_IrrationaleFuncties_Oefeningen.pdf)              |
 | 1.10 Integraalrekening                   | [theorie]({{page.aso}}/0110_Integraalrekening.pdf)                | [oefeningen]({{page.aso}}/0110_Integraalrekening_Oefeningen.pdf)                |
 | 2.1 Combinatieleer                       | [theorie]({{page.aso}}/0201_Combinatieleer.pdf)                   | [oefeningen]({{page.aso}}/0201_Combinatieleer_Oefeningen.pdf)                   |
 | 2.2 Elementaire Kansrekening             | [theorie]({{page.aso}}/0202_ElementaireKansrekening.pdf)          | [oefeningen]({{page.aso}}/0202_ElementaireKansrekening_Oefeningen.pdf)          |
 | 2.3 Kansverdelingen                      | [theorie]({{page.aso}}/0203_Kansverdelingen.pdf)                  | [oefeningen]({{page.aso}}/0203_Kansverdelingen_Oefeningen.pdf)                  |
-| 3.1 Matrices En Stelsels                 | [theorie]({{page.aso}}/0203_MatricesEnstelsels.pdf)               | [oefeningen]({{page.aso}}/0301_MatricesEnStelsels_Oefeningen.pdf)               |
+| 3.1 Matrices En Stelsels                 | [theorie]({{page.aso}}/0301_MatricesEnStelsels.pdf)               | [oefeningen]({{page.aso}}/0301_MatricesEnStelsels_Oefeningen.pdf)               |
 | 3.2 Complexe Getallen                    | [theorie]({{page.aso}}/0302_ComplexeGetallen.pdf)                 | [oefeningen]({{page.aso}}/0302_ComplexeGetallen_Oefeningen.pdf)                 |
 
 
