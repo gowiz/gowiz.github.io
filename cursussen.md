@@ -2,7 +2,7 @@
 layout: default
 title: Cursussen wiskunde
 tso: https://github.com/gowiz/tso-3gr-2u-2005-069/releases/download/v20.8
-aso: https://github.com/gowiz/aso-3gr-3u2u-2006-059/releases/download/v20.8
+aso: https://github.com/gowiz/aso-3gr-3u2u-2006-059/releases/download/v22.10
 ---
 
 Cursussen wiskunde
@@ -35,7 +35,7 @@ Deze cursussen volgen de leerplannen wiskunde van het GO! (2006-059) voor de mod
 | 1.5.u Afgeleiden van Bijzondere Functies | [theorie]({{page.aso}}/0105U_AfgeleidenVanBijzondereFuncties.pdf) | [oefeningen]({{page.aso}}/0105U_AfgeleidenVanBijzondereFuncties_Oefeningen.pdf) |
 | 1.6 Goniometrische Functies              | [theorie]({{page.aso}}/0106_GoniometrischeFuncties.pdf)           |                                                                                 |
 | 1.6.u Goniometrische Formules            | [theorie]({{page.aso}}/0106U_GoniometrischeFormules.pdf)          | [oefeningen]({{page.aso}}/0106U_GoniometrischeFormules_Oefeningen.pdf)          |
-| 1.7 Exponentiële Functies                |                                                                   | [oefeningen]({{page.aso}}/0107_ExponentieleFuncties_Oefeningen.pdf)             |
+| 1.7 Exponentiële Functies                | [theorie]({{page.aso}}/0107_ExponentieleFuncties.pdf)             | [oefeningen]({{page.aso}}/0107_ExponentieleFuncties_Oefeningen.pdf)             |
 | 1.8 Logaritmische Functies               | [theorie]({{page.aso}}/0108_LogaritmischeFuncties.pdf)            | [oefeningen]({{page.aso}}/0108_LogaritmischeFuncties_Oefeningen.pdf)            |
 | 1.9 Irrationale Functies                 | [theorie]({{page.aso}}/0109_IrrationaleFuncties.pdf)              | [oefeningen]({{page.aso}}/0109_IrrationaleFuncties_Oefeningen.pdf)              |
 | 1.10 Integraalrekening                   | [theorie]({{page.aso}}/0110_Integraalrekening.pdf)                | [oefeningen]({{page.aso}}/0110_Integraalrekening_Oefeningen.pdf)                |
