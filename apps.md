@@ -11,7 +11,7 @@ Android applications
 [Formularium]({{page.playstore}}be.ppareit.formularium)
 ----------------------
 
-Toon de wiskundige formules, figuren en definities die je _allemaal__ kan nodig hebben in het secundair onderwijs.
+Toon de wiskundige formules, figuren en definities die je _allemaal_ kan nodig hebben in het secundair onderwijs.
 
 Eigenlijk moet ik zeggen, bijna allemaal. Momenteel zijn reële functies en verdelingsfuncties nog niet toegevoegd en is er nog heel wat werk aan meetkunde. Het is de bedoeling dat nog dit jaar alles toegevoegd is. Nu is het zeker al bruikbaar.
 
