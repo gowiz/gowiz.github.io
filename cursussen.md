@@ -8,6 +8,11 @@ aso: https://github.com/gowiz/aso-3gr-3u2u-2006-059/releases/download/v22.10
 Cursussen wiskunde
 ==================
 
+6de jaar
+---------
+
+| Synthetische ruimtemeetkunde | [interactieve cursus](/ruimtemeetkunde/) |
+
 3de graad TSO 2u
 ----------------
 Deze cursussen volgen de leerplannen wiskunde van het GO! (2005-069) voor de technische richtingen met 2 uur wiskunde.
@@ -44,7 +49,6 @@ Deze cursussen volgen de leerplannen wiskunde van het GO! (2006-059) voor de mod
 | 2.3 Kansverdelingen                      | [theorie]({{page.aso}}/0203_Kansverdelingen.pdf)                  | [oefeningen]({{page.aso}}/0203_Kansverdelingen_Oefeningen.pdf)                  |
 | 3.1 Matrices En Stelsels                 | [theorie]({{page.aso}}/0301_MatricesEnStelsels.pdf)               | [oefeningen]({{page.aso}}/0301_MatricesEnStelsels_Oefeningen.pdf)               |
 | 3.2 Complexe Getallen                    | [theorie]({{page.aso}}/0302_ComplexeGetallen.pdf)                 | [oefeningen]({{page.aso}}/0302_ComplexeGetallen_Oefeningen.pdf)                 |
-
 
 
 

@@ -1,0 +1,2928 @@
+<!DOCTYPE html>
+<html lang="nl-BE">
+<head>
+<meta charset="UTF-8" />
+<meta name="generator" content="LaTeX Lwarp package" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Synthetische ruimtemeetkunde</title>
+<link rel="stylesheet" type="text/css" href="presentatie.css?v=1788498321" />
+
+<script>
+// Lwarp MathJax emulation code
+//
+// Based on code by Davide P. Cervone.
+// Equation numbering: https://github.com/mathjax/MathJax/issues/2427
+// Starred and ifnextchar macros: https://github.com/mathjax/MathJax/issues/2428
+// \left, \right delimiters: https://github.com/mathjax/MathJax/issues/2535
+//
+// Modified by Brian Dunn to adjust equation numbering and add subequations.
+//
+// LaTeX can use \seteqnumber{subequations?}{section}{number} before each equation.
+// subequations? is 0 usually, 1 if inside subequations.
+// section is a string printed as-is, or empty.
+// number is auto-incremented by MathJax between equations.
+//
+MathJax = {
+     subequations: "0",
+     section: "",
+     loader: {
+          load: ['[tex]/tagformat', '[tex]/textmacros'],
+     },
+     startup: {
+          ready() {
+              //       These would be replaced by import commands if you wanted to make
+              //       a proper extension.
+              const Configuration = MathJax._.input.tex.Configuration.Configuration;
+              const CommandMap = MathJax._.input.tex.SymbolMap.CommandMap;
+              const Macro = MathJax._.input.tex.Symbol.Macro;
+              const TexError = MathJax._.input.tex.TexError.default;
+              const ParseUtil = MathJax._.input.tex.ParseUtil.default;
+              const expandable = MathJax._.util.Options.expandable;
+
+
+              //       Insert the replacement string into the TeX string, and check
+              //       that there haven't been too many maxro substitutions (prevents
+              //       infinite loops).
+              const useArgument = (parser, text) => {
+                   parser.string = ParseUtil.addArgs(parser, text, parser.string.slice(parser.i));
+                   parser.i = 0;
+                   if (++parser.macroCount > parser.configuration.options.maxMacros) {
+                        throw new TexError('MaxMacroSub1',
+                        'MathJax maximum macro substitution count exceeded; ' +
+                        'is there a recursive macro call?');
+                   }
+              }
+
+
+              //       Create the command map for:
+              //            \ifstar, \ifnextchar, \ifblank, \ifstrequal, \gsub, \seteqnumber
+              new CommandMap('Lwarp-macros', {
+                   ifstar: 'IfstarFunction',
+                   ifnextchar: 'IfnextcharFunction',
+                   ifblank: 'IfblankFunction',
+                   ifstrequal: 'IfstrequalFunction',
+                   gsubstitute: 'GsubstituteFunction',
+                   seteqnumber: 'SeteqnumberFunction'
+              }, {
+                   //       This function implements an ifstar macro.
+                   IfstarFunction(parser, name) {
+                        const resultstar = parser.GetArgument(name);
+                        const resultnostar = parser.GetArgument(name);
+                        const star = parser.GetStar();                        // true if there is a *
+                        useArgument(parser, star ? resultstar : resultnostar);
+                   },
+
+
+                   //       This function implements an ifnextchar macro.
+                   IfnextcharFunction(parser, name) {
+                        let whichchar = parser.GetArgument(name);
+                        if (whichchar.match(/^(?:0x[0-9A-F]+|[0-9]+)$/i)) {
+                            // $ syntax highlighting
+                            whichchar = String.fromCodePoint(parseInt(whichchar));
+                        }
+                        const resultnextchar = parser.GetArgument(name);
+                        const resultnotnextchar = parser.GetArgument(name);
+                        const gotchar = (parser.GetNext() === whichchar);
+                        useArgument(parser, gotchar ? resultnextchar : resultnotnextchar);
+                   },
+
+
+                   // This function implements an ifblank macro.
+                   IfblankFunction(parser, name) {
+                        const blankarg = parser.GetArgument(name);
+                        const resultblank = parser.GetArgument(name);
+                        const resultnotblank = parser.GetArgument(name);
+                        const isblank = (blankarg.trim() == "");
+                        useArgument(parser, isblank ? resultblank : resultnotblank);
+                   },
+
+
+                   // This function implements an ifstrequal macro.
+                   IfstrequalFunction(parser, name) {
+                        const strequalfirst = parser.GetArgument(name);
+                        const strequalsecond = parser.GetArgument(name);
+                        const resultequal = parser.GetArgument(name);
+                        const resultnotequal = parser.GetArgument(name);
+                        const isequal = (strequalfirst == strequalsecond);
+                        useArgument(parser, isequal ? resultequal : resultnotequal);
+                   },
+
+
+                   // This function implements a gsub macro.
+                   GsubstituteFunction(parser, name) {
+                        const gsubfirst = parser.GetArgument(name);
+                        const gsubsecond = parser.GetArgument(name);
+                        const gsubthird = parser.GetArgument(name);
+                        let gsubresult=gsubfirst.replace(gsubsecond, gsubthird);
+                        useArgument(parser, gsubresult);
+                   },
+
+
+                   //       This function modifies the equation numbers.
+                   SeteqnumberFunction(parser, name) {
+                            //   Get the macro parameters
+                            const star = parser.GetStar();                      // true if there is a *
+                            const optBrackets = parser.GetBrackets(name);        // contents of optional brackets
+                            const newsubequations = parser.GetArgument(name);      // the subequations argument
+                            const neweqsection = parser.GetArgument(name);      // the eq section argument
+                            const neweqnumber = parser.GetArgument(name);        // the eq number argument
+                            MathJax.config.subequations=newsubequations ;       // a string with boolean meaning
+                            MathJax.config.section=neweqsection ;               // a string with numeric meaning
+                            parser.tags.counter = parser.tags.allCounter = neweqnumber ;
+                   }
+
+
+              });
+
+
+              //       Create the Lwarp-macros package
+              Configuration.create('Lwarp-macros', {
+                   handler: {macro: ['Lwarp-macros']}
+              });
+
+
+              MathJax.startup.defaultReady();
+
+
+              // For forward references:
+              MathJax.startup.input[0].preFilters.add(({math}) => {
+                   if (math.inputData.recompile){
+                            MathJax.config.subequations = math.inputData.recompile.subequations;
+                            MathJax.config.section = math.inputData.recompile.section;
+                   }
+              });
+              MathJax.startup.input[0].postFilters.add(({math}) => {
+                   if (math.inputData.recompile){
+                            math.inputData.recompile.subequations = MathJax.config.subequations;
+                            math.inputData.recompile.section = MathJax.config.section;
+                   }
+              });
+
+
+                   // For \left, \right with unicode-math:
+                   const {DelimiterMap} = MathJax._.input.tex.SymbolMap;
+                   const {Symbol} = MathJax._.input.tex.Symbol;
+                   const {MapHandler} = MathJax._.input.tex.MapHandler;
+                   const delimiter = MapHandler.getMap('delimiter');
+                   delimiter.add('\\lBrack', new Symbol('\\lBrack', '\u27E6'));
+                   delimiter.add('\\rBrack', new Symbol('\\rBrack', '\u27E7'));
+                   delimiter.add('\\lAngle', new Symbol('\\lAngle', '\u27EA'));
+                   delimiter.add('\\rAngle', new Symbol('\\rAngle', '\u27EB'));
+                   delimiter.add('\\lbrbrak', new Symbol('\\lbrbrak', '\u2772'));
+                   delimiter.add('\\rbrbrak', new Symbol('\\rbrbrak', '\u2773'));
+                   delimiter.add('\\lbag', new Symbol('\\lbag', '\u27C5'));
+                   delimiter.add('\\rbag', new Symbol('\\rbag', '\u27C6'));
+                   delimiter.add('\\llparenthesis', new Symbol('\\llparenthesis', '\u2987'));
+                   delimiter.add('\\rrparenthesis', new Symbol('\\rrparenthesis', '\u2988'));
+                   delimiter.add('\\llangle', new Symbol('\\llangle', '\u2989'));
+                   delimiter.add('\\rrangle', new Symbol('\\rrangle', '\u298A'));
+                   delimiter.add('\\Lbrbrak', new Symbol('\\Lbrbrak', '\u27EC'));
+                   delimiter.add('\\Rbrbrak', new Symbol('\\Rbrbrak', '\u27ED'));
+                   delimiter.add('\\lBrace', new Symbol('\\lBrace', '\u2983'));
+                   delimiter.add('\\rBrace', new Symbol('\\rBrace', '\u2984'));
+                   delimiter.add('\\lParen', new Symbol('\\lParen', '\u2985'));
+                   delimiter.add('\\rParen', new Symbol('\\rParen', '\u2986'));
+                   delimiter.add('\\lbrackubar', new Symbol('\\lbrackubar', '\u298B'));
+                   delimiter.add('\\rbrackubar', new Symbol('\\rbrackubar', '\u298C'));
+                   delimiter.add('\\lbrackultick', new Symbol('\\lbrackultick', '\u298D'));
+                   delimiter.add('\\rbracklrtick', new Symbol('\\rbracklrtick', '\u298E'));
+                   delimiter.add('\\lbracklltick', new Symbol('\\lbracklltick', '\u298F'));
+                   delimiter.add('\\rbrackurtick', new Symbol('\\rbrackurtick', '\u2990'));
+                   delimiter.add('\\langledot', new Symbol('\\langledot', '\u2991'));
+                   delimiter.add('\\rangledot', new Symbol('\\rangledot', '\u2992'));
+                   delimiter.add('\\lparenless', new Symbol('\\lparenless', '\u2993'));
+                   delimiter.add('\\rparengtr', new Symbol('\\rparengtr', '\u2994'));
+                   delimiter.add('\\Lparengtr', new Symbol('\\Lparengtr', '\u2995'));
+                   delimiter.add('\\Rparenless', new Symbol('\\Rparenless', '\u2996'));
+                   delimiter.add('\\lblkbrbrak', new Symbol('\\lblkbrbrak', '\u2997'));
+                   delimiter.add('\\rblkbrbrak', new Symbol('\\rblkbrbrak', '\u2998'));
+                   delimiter.add('\\lvzigzag', new Symbol('\\lvzigzag', '\u29D8'));
+                   delimiter.add('\\rvzigzag', new Symbol('\\rvzigzag', '\u29D9'));
+                   delimiter.add('\\Lvzigzag', new Symbol('\\Lvzigzag', '\u29DA'));
+                   delimiter.add('\\Rvzigzag', new Symbol('\\Rvzigzag', '\u29DB'));
+                   delimiter.add('\\lcurvyangle', new Symbol('\\lcurvyangle', '\u29FC'));
+                   delimiter.add('\\rcurvyangle', new Symbol('\\rcurvyangle', '\u29FD'));
+                   delimiter.add('\\Vvert', new Symbol('\\Vvert', '\u2980'));
+          }       // ready
+     },            // startup
+
+
+     tex: {
+          packages: {'[+]': ['tagformat', 'Lwarp-macros', 'textmacros']},
+          tags: "ams",
+                   tagformat: {
+                            number: function (n) {
+                                 if(MathJax.config.subequations==0)
+                                        return(MathJax.config.section + n);
+                                 else
+                                        return(MathJax.config.section + String.fromCharCode(96+n));
+                            },
+                   },
+     }
+}
+</script>
+
+
+<script
+          id="MathJax-script"
+          src="tex-svg-full.js"
+></script>
+
+</head>
+<body>
+
+
+<div class="homepagegrid">
+
+
+<main class="bodycontainer">
+
+
+<section class="textbody">
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autofile-0"></a>
+
+<!--MathJax customizations:-->
+<div data-nosnippet
+    style="display:none"
+>
+
+\(\newcommand{\footnotename}{footnote}\)
+
+\(\def \LWRfootnote {1}\)
+
+\(\newcommand {\footnote }[2][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\newcommand {\footnotemark }[1][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\let \LWRorighspace \hspace \)
+
+\(\renewcommand {\hspace }{\ifstar \LWRorighspace \LWRorighspace }\)
+
+\(\newcommand {\TextOrMath }[2]{#2}\)
+
+\(\newcommand {\mathnormal }[1]{{#1}}\)
+
+\(\newcommand \ensuremath [1]{#1}\)
+
+\(\newcommand {\LWRframebox }[2][]{\fbox {#2}} \newcommand {\framebox }[1][]{\LWRframebox } \)
+
+\(\newcommand {\setlength }[2]{}\)
+
+\(\newcommand {\addtolength }[2]{}\)
+
+\(\newcommand {\setcounter }[2]{}\)
+
+\(\newcommand {\addtocounter }[2]{}\)
+
+\(\newcommand {\arabic }[1]{}\)
+
+\(\newcommand {\number }[1]{}\)
+
+\(\newcommand {\noalign }[1]{\text {#1}\notag \\}\)
+
+\(\newcommand {\cline }[1]{}\)
+
+\(\newcommand {\directlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\luatexdirectlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\protect }{}\)
+
+\(\def \LWRabsorbnumber #1 {}\)
+
+\(\def \LWRabsorbquotenumber &quot;#1 {}\)
+
+\(\newcommand {\LWRabsorboption }[1][]{}\)
+
+\(\newcommand {\LWRabsorbtwooptions }[1][]{\LWRabsorboption }\)
+
+\(\def \mathchar {\ifnextchar &quot;\LWRabsorbquotenumber \LWRabsorbnumber }\)
+
+\(\def \mathcode #1={\mathchar }\)
+
+\(\let \delcode \mathcode \)
+
+\(\let \delimiter \mathchar \)
+
+\(\def \oe {\unicode {x0153}}\)
+
+\(\def \OE {\unicode {x0152}}\)
+
+\(\def \ae {\unicode {x00E6}}\)
+
+\(\def \AE {\unicode {x00C6}}\)
+
+\(\def \aa {\unicode {x00E5}}\)
+
+\(\def \AA {\unicode {x00C5}}\)
+
+\(\def \o {\unicode {x00F8}}\)
+
+\(\def \O {\unicode {x00D8}}\)
+
+\(\def \l {\unicode {x0142}}\)
+
+\(\def \L {\unicode {x0141}}\)
+
+\(\def \ss {\unicode {x00DF}}\)
+
+\(\def \SS {\unicode {x1E9E}}\)
+
+\(\def \dag {\unicode {x2020}}\)
+
+\(\def \ddag {\unicode {x2021}}\)
+
+\(\def \P {\unicode {x00B6}}\)
+
+\(\def \copyright {\unicode {x00A9}}\)
+
+\(\def \pounds {\unicode {x00A3}}\)
+
+\(\let \LWRref \ref \)
+
+\(\renewcommand {\ref }{\ifstar \LWRref \LWRref }\)
+
+\( \newcommand {\multicolumn }[3]{#3}\)
+
+\(\require {textcomp}\)
+
+\(\newcommand {\opl }[2][]{\bbox [whitesmoke, 3px, border:                                     1px dashed darkseagreen]{\class {opl-math}{#2}}}\)
+
+\(\newcommand {\intertext }[1]{\text {#1}\notag \\}\)
+
+\(\let \Hat \hat \)
+
+\(\let \Check \check \)
+
+\(\let \Tilde \tilde \)
+
+\(\let \Acute \acute \)
+
+\(\let \Grave \grave \)
+
+\(\let \Dot \dot \)
+
+\(\let \Ddot \ddot \)
+
+\(\let \Breve \breve \)
+
+\(\let \Bar \bar \)
+
+\(\let \Vec \vec \)
+
+\(\require {mathtools}\)
+
+\(\newcommand {\vcentcolon }{\mathrel {\unicode {x2236}}}\)
+
+\(\newcommand {\approxcolon }{\approx \vcentcolon }\)
+
+\(\newcommand {\Approxcolon }{\approx \dblcolon }\)
+
+\(\newcommand {\simcolon }{\sim \vcentcolon }\)
+
+\(\newcommand {\Simcolon }{\sim \dblcolon }\)
+
+\(\newcommand {\dashcolon }{\mathrel {-}\vcentcolon }\)
+
+\(\newcommand {\Dashcolon }{\mathrel {-}\dblcolon }\)
+
+\(\newcommand {\colondash }{\vcentcolon \mathrel {-}}\)
+
+\(\newcommand {\Colondash }{\dblcolon \mathrel {-}}\)
+
+\(\newenvironment {crampedsubarray}[1]{}{}\)
+
+\(\newcommand {\smashoperator }[2][]{#2\limits }\)
+
+\(\newcommand {\SwapAboveDisplaySkip }{}\)
+
+\(\newcommand {\LaTeXunderbrace }[1]{\underbrace {#1}}\)
+
+\(\newcommand {\LaTeXoverbrace }[1]{\overbrace {#1}}\)
+
+\(\Newextarrow \xLongleftarrow {10,10}{0x21D0}\)
+
+\(\Newextarrow \xLongrightarrow {10,10}{0x21D2}\)
+
+\(\let \xlongleftarrow \xleftarrow \)
+
+\(\let \xlongrightarrow \xrightarrow \)
+
+\(\newcommand {\LWRmultlined }[1][]{\begin {multline*}}\)
+
+\(\newenvironment {multlined}[1][]{\LWRmultlined }{\end {multline*}}\)
+
+\(\let \LWRorigshoveleft \shoveleft \)
+
+\(\renewcommand {\shoveleft }[1][]{\LWRorigshoveleft }\)
+
+\(\let \LWRorigshoveright \shoveright \)
+
+\(\renewcommand {\shoveright }[1][]{\LWRorigshoveright }\)
+
+\(\newcommand {\shortintertext }[1]{\text {#1}\notag \\}\)
+
+\(\newcommand {\bm }[1]{\boldsymbol {#1}}\)
+
+\(\newcommand {\toprule }[1][]{\hline }\)
+
+\(\let \midrule \toprule \)
+
+\(\let \bottomrule \toprule \)
+
+\(\def \LWRbooktabscmidruleparen (#1)#2{}\)
+
+\(\newcommand {\LWRbooktabscmidrulenoparen }[1]{}\)
+
+\(\newcommand {\cmidrule }[1][]{\ifnextchar (\LWRbooktabscmidruleparen \LWRbooktabscmidrulenoparen }\)
+
+\(\newcommand {\morecmidrules }{}\)
+
+\(\newcommand {\specialrule }[3]{\hline }\)
+
+\(\newcommand {\addlinespace }[1][]{}\)
+
+\(\newcommand {\LWRnicearrayarray }[1]{\begin {array}{#1}}\)
+
+\(\def \LWRnicearrayarrayopt #1[#2] {\begin {array}{#1}}\)
+
+\(\newenvironment {NiceArray}[2][]{\ifnextchar [{\LWRnicearrayarrayopt {#2}}{\LWRnicearrayarray {#2}}}{\end {array}}\)
+
+\(\newcommand {\LWRnicearraywithdelimtwo }[2][]{\ifnextchar [{\LWRnicearrayarrayopt {#2}}{\LWRnicearrayarray {#2}}}\)
+
+\(\newenvironment {NiceArrayWithDelims}[2]{\def \LWRnicearrayrightdelim {\right #2}\left #1\LWRnicearraywithdelimtwo }{\end {array}\LWRnicearrayrightdelim }\)
+
+\(\newenvironment {pNiceArray} {\begin {NiceArrayWithDelims}{(}{)}} {\end {NiceArrayWithDelims}} \)
+
+\(\newenvironment {bNiceArray} {\begin {NiceArrayWithDelims}{[}{]}} {\end {NiceArrayWithDelims}} \)
+
+\(\newenvironment {BNiceArray} {\begin {NiceArrayWithDelims}{\{}{\}}} {\end {NiceArrayWithDelims}} \)
+
+\(\newenvironment {vNiceArray} {\begin {NiceArrayWithDelims}{\vert }{\vert }} {\end {NiceArrayWithDelims}} \)
+
+\(\newenvironment {VNiceArray} {\begin {NiceArrayWithDelims}{\Vert }{\Vert }} {\end {NiceArrayWithDelims}} \)
+
+\(\newenvironment {NiceMatrix}[1][]{\begin {matrix}}{\end {matrix}}\)
+
+\(\newenvironment {pNiceMatrix}[1][]{\begin {pmatrix}}{\end {pmatrix}}\)
+
+\(\newenvironment {bNiceMatrix}[1][]{\begin {bmatrix}}{\end {bmatrix}}\)
+
+\(\newenvironment {BNiceMatrix}[1][]{\begin {Bmatrix}}{\end {Bmatrix}}\)
+
+\(\newenvironment {vNiceMatrix}[1][]{\begin {vmatrix}}{\end {vmatrix}}\)
+
+\(\newenvironment {VNiceMatrix}[1][]{\begin {Vmatrix}}{\end {Vmatrix}}\)
+
+\(\newcommand {\LWRnicematrixBlock }[1]{#1}\)
+
+\(\def \LWRnicematrixBlockopt &lt;#1&gt;#2{#2}\)
+
+\(\newcommand {\Block }[2][]{\ifnextchar &lt;\LWRnicematrixBlockopt \LWRnicematrixBlock }\)
+
+\(\newcommand {\diagbox }[2]{\begin {array}{l}\hfill \quad #2\\\hline #1\quad \hfill \end {array}}\)
+
+\(\let \hdottedline \hdashline \)
+
+\(\newcommand {\Hline }[1][]{\hline }\)
+
+\(\newcommand {\CodeBefore }{}\)
+
+\(\newcommand {\Body }{}\)
+
+\(\newcommand {\CodeAfter }{}\)
+
+\(\newcommand {\line }[3][]{}\)
+
+\(\newcommand {\RowStyle }[2][]{}\)
+
+\(\newcommand {\LWRSubMatrix }[1][]{}\)
+
+\(\newcommand {\SubMatrix }[4]{\LWRSubMatrix }\)
+
+\(\newcommand {\OverBrace }[4][]{}\)
+
+\(\newcommand {\UnderBrace }[4][]{}\)
+
+\(\newcommand {\HBrace }[3][]{}\)
+
+\(\newcommand {\VBrace }[3][]{}\)
+
+\(\newcommand {\ShowCellNames }{}\)
+
+\(\newcommand {\tabularnote }[2][]{}\)
+
+\(\newcommand {\cellcolor }[3][]{}\)
+
+\(\newcommand {\rowcolor }[3][]{}\)
+
+\(\newcommand {\LWRrowcolors }[1][]{}\)
+
+\(\newcommand {\rowcolors }[4][]{\LWRrowcolors }\)
+
+\(\newcommand {\rowlistcolors }[3][]{\LWRrowcolors }\)
+
+\(\newcommand {\columncolor }[3][]{}\)
+
+\(\newcommand {\rectanglecolor }[4][]{}\)
+
+\(\newcommand {\arraycolor }[2][]{}\)
+
+\(\newcommand {\chessboardcolors }[3][]{}\)
+
+\(\newcommand {\ldots }[1][]{\dots }\)
+
+\(\newcommand {\Cdots }[1][]{\cdots }\)
+
+\(\newcommand {\Vdots }[1][]{\vdots }\)
+
+\(\newcommand {\Ddots }[1][]{\ddots }\)
+
+\(\newcommand {\Iddots }[1][]{\mathinner {\unicode {x22F0}}}\)
+
+\(\newcommand {\Hdotsfor }[1]{\ldots }\)
+
+\(\newcommand {\Vdotsfor }[1]{\vdots }\)
+
+\(\newcommand {\AutoNiceMatrix }[2]{\text {(AutoNiceMatrix #1)}}\)
+
+\(\let \pAutoNiceMatrix \AutoNiceMatrix \)
+
+\(\let \bAutoNiceMatrix \AutoNiceMatrix \)
+
+\(\let \BAutoNiceMatrix \AutoNiceMatrix \)
+
+\(\let \vAutoNiceMatrix \AutoNiceMatrix \)
+
+\(\let \VAutoNiceMatrix \AutoNiceMatrix \)
+
+\(\require {cancel}\)
+
+\(\newcommand {\LWRsubmultirow }[2][]{#2}\)
+
+\(\newcommand {\LWRmultirow }[2][]{\LWRsubmultirow }\)
+
+\(\newcommand {\multirow }[2][]{\LWRmultirow }\)
+
+\(\newcommand {\mrowcell }{}\)
+
+\(\newcommand {\mcolrowcell }{}\)
+
+\(\newcommand {\STneed }[1]{}\)
+
+\(\newcommand {\LWRldelimtwo }[1][]{\text {#1}~\LWRbigdelim }\)
+
+\(\newcommand {\LWRldelimone }[2][]{\LWRldelimtwo }\)
+
+\(\def \ldelim #1#2{\def \LWRbigdelim {#1}\LWRldelimone }\)
+
+\(\newcommand {\LWRrdelimtwo }[1][]{\LWRbigdelim ~\text {#1}}\)
+
+\(\newcommand {\LWRrdelimone }[2][]{\LWRrdelimtwo }\)
+
+\(\def \rdelim #1#2{\def \LWRbigdelim {#1}\LWRrdelimone }\)
+
+</div>
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-1"></a>
+
+<p>
+<header class="cursustitel"> <p class="cursushoofdstuk">Hoofdstuk 1</p> <h1>Synthetische ruimtemeetkunde</h1> </header>
+</p>
+<!--
+...... section Grondbegrippen en axioma’s ......
+-->
+<h4 id="autosec-2"><span class="sectionnumber">I&#x2003;</span>Grondbegrippen en axioma’s</h4>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-2"></a>
+<!--
+...... subsection Grondbegrippen ......
+-->
+<h5 id="autosec-3"><span class="sectionnumber">1&#x2003;</span>Grondbegrippen</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-3"></a>
+
+
+<p>
+De ruimtemeetkunde wordt opgebouwd zoals elke wiskundige theorie: uit grondbegrippen, axioma’s en stellingen. De grondbegrippen zijn <em>ruimte</em>, <em>vlak</em>, <em>rechte</em> en <em>punt</em>. We noteren de
+ruimte met \(\Sigma \).
+</p>
+<!--
+...... subsubsection Verzamelingen ......
+-->
+<h6 id="autosec-4">Verzamelingen</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-4"></a>
+
+
+<p>
+De verzameling van alle rechten van \(\Sigma \) is <span class="opl opl-fill" >\(\mathcal {R}=\{a\mid a\text { is een rechte van }\Sigma \}\).</span>
+</p>
+
+<p>
+De verzameling van alle vlakken van \(\Sigma \) is <span class="opl opl-fill" >\(\mathcal {V}=\{\alpha \mid \alpha \text { is een vlak van }\Sigma \}\).</span>
+</p>
+<!--
+...... subsubsection Begrippen ......
+-->
+<h6 id="autosec-5">Begrippen</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-5"></a>
+
+
+<p>
+Collineaire punten: <span class="opl opl-fill" >punten die tot eenzelfde rechte behoren.</span>
+</p>
+
+<p>
+Concurrente rechten: <span class="opl opl-fill" >rechten die door eenzelfde punt gaan.</span>
+</p>
+
+<p>
+Coplanaire punten of rechten: <span class="opl opl-fill" >punten of rechten in eenzelfde vlak.</span>
+</p>
+
+<p>
+Een punt en een rechte zijn incident als het punt op de rechte ligt. Een punt en een vlak zijn incident als het punt in het vlak ligt. Een rechte en een vlak zijn incident als de rechte in het vlak ligt.
+</p>
+<!--
+...... subsubsection Symbolen ......
+-->
+<h6 id="autosec-6">Symbolen</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-6"></a>
+<div class="multicols">
+
+<dl class="description" >
+
+<dt><span class="listmarker">\(\in \)</span></dt>
+<dd>
+<p>
+<span class="opl opl-fill" >behoort tot.</span>
+</p>
+
+</dd>
+<dt><span class="listmarker">\(\notin \)</span></dt>
+<dd>
+<p>
+<span class="opl opl-fill" >behoort niet tot.</span>
+</p>
+
+</dd>
+<dt><span class="listmarker">\(\subset \)</span></dt>
+<dd>
+<p>
+<span class="opl opl-fill" >is een deelverzameling van.</span>
+</p>
+
+</dd>
+<dt><span class="listmarker">\(\forall \)</span></dt>
+<dd>
+<p>
+<span class="opl opl-fill" >voor alle.</span>
+</p>
+
+</dd>
+<dt><span class="listmarker">\(\exists \)</span></dt>
+<dd>
+<p>
+<span class="opl opl-fill" >er bestaat minstens één.</span>
+</p>
+
+</dd>
+<dt><span class="listmarker">\(\exists !\)</span></dt>
+<dd>
+<p>
+<span class="opl opl-fill" >er bestaat precies één.</span>
+</p>
+
+</dd>
+<dt><span class="listmarker">\(\parallel \)</span></dt>
+<dd>
+<p>
+<span class="opl opl-fill" >is evenwijdig met.</span>
+</p>
+
+</dd>
+<dt><span class="listmarker">\(\cap \)</span></dt>
+<dd>
+<p>
+<span class="opl opl-fill" >doorsnede.</span>
+</p>
+</dd>
+</dl>
+
+</div>
+<!--
+...... subsection Axioma’s ......
+-->
+<h5 id="autosec-8"><span class="sectionnumber">2&#x2003;</span>Axioma’s</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-8"></a>
+<!--
+...... subsubsection Axioma A1 ......
+-->
+<h6 id="autosec-9">Axioma A1</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-9"></a>
+
+
+<p>
+<i>De ruimte is een oneindige verzameling van punten met bijzondere niet-lege deelverzamelingen die men rechten en vlakken noemt.</i> <div class="oplossing">
+</p>
+<div class="center">
+
+<p>
+<iframe src="./axioma_a1.html" style="display:block; width:62vw; height:36vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsubsection Axioma A2 ......
+-->
+<h6 id="autosec-11">Axioma A2</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-11"></a>
+
+
+<p>
+<i>In elk vlak van de ruimte gelden de axioma’s en stellingen van de vlakke meetkunde.</i> <div class="oplossing"> Ter herinnering, de axioma’s van de vlakke meetkunde:
+</p>
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> Een vlak is een oneindige verzameling van punten, met bijzondere niet-lege deelverzamelingen die men rechten noemt.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> Door twee verschillende punten gaat precies één rechte.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> Elke rechte bevat oneindig veel punten, en buiten elke rechte liggen oneindig veel punten.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> Twee verschillende rechten hebben hoogstens één punt gemeen.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> Door een punt buiten een rechte gaat precies één rechte evenwijdig met die rechte (parallellenaxioma van Euclides).
+</p>
+</li>
+</ul>
+
+<p>
+Samen met die axioma’s gelden in elk vlak van de ruimte ook alle stellingen die eruit volgen: de som van de hoeken van een driehoek is \(180\degree \), de stelling van Pythagoras, de stelling van Thales, de congruentie- en
+gelijkvormigheidskenmerken, &#x2026;</div>
+</p>
+<!--
+...... subsubsection Axioma A3 ......
+-->
+<h6 id="autosec-12">Axioma A3</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-12"></a>
+
+
+<p>
+<i>Door drie gegeven niet-collineaire punten \(A\), \(B\) en \(C\) gaat precies één vlak.</i> Dat vlak noteren we als \(\operatorname {vl}(ABC)\). <div class="oplossing">
+</p>
+<div class="center">
+
+<p>
+<iframe src="./axioma_a3.html" style="display:block; width:58vw; height:34vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+\[A,B,C\text { niet-collineair}\Longrightarrow \exists !\alpha \in \mathcal V:\ A,B,C\in \alpha .\]
+</p>
+
+<p>
+</div>
+</p>
+<!--
+...... subsubsection Axioma A4 ......
+-->
+<h6 id="autosec-14">Axioma A4</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-14"></a>
+
+
+<p>
+<i>Als twee verschillende punten van een rechte tot een vlak behoren, dan ligt deze rechte in het vlak.</i> <div class="oplossing">
+</p>
+
+<p>
+\[A\ne B,\quad A,B\in a,\quad A,B\in \alpha \Longrightarrow a\subset \alpha .\]
+</p>
+<div class="center">
+
+<p>
+<iframe src="./axioma_a4.html" style="display:block; width:48vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsubsection Axioma A5 ......
+-->
+<h6 id="autosec-16">Axioma A5</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-16"></a>
+
+
+<p>
+<i>Voor twee vlakken geldt precies één mogelijkheid: ze vallen samen, ze hebben geen punt gemeen, of ze hebben precies één rechte gemeen.</i> <div class="oplossing">
+</p>
+<div class="center">
+
+<p>
+<iframe src="./ligging_vlakken.html" style="display:block; width:76vw; height:38vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Gevolgen ......
+-->
+<h5 id="autosec-18"><span class="sectionnumber">3&#x2003;</span>Gevolgen</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-18"></a>
+<!--
+...... subsubsection Gevolg G1 ......
+-->
+<h6 id="autosec-19">Gevolg G1</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-19"></a>
+
+
+<p>
+<i>Door twee verschillende punten gaat ten minste één vlak.</i> <div class="oplossing"> Neem \(A\ne B\). Kies \(C\) dat niet op de rechte \(AB\) ligt. Volgens A3 bestaat \(\operatorname {vl}(ABC)\), en dat vlak bevat
+\(A\) en \(B\). </div>
+</p>
+<!--
+...... subsubsection Gevolg G2 ......
+-->
+<h6 id="autosec-20">Gevolg G2</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-20"></a>
+
+
+<p>
+<i>Twee verschillende punten bepalen precies één rechte.</i> <div class="oplossing"> Volgens G1 liggen \(A\) en \(B\) in een vlak. Daar geldt de vlakke meetkunde (A2), dus door \(A\ne B\) gaat precies één rechte, die we
+\(AB\) noemen. </div>
+</p>
+<!--
+...... subsubsection Gevolg G3 ......
+-->
+<h6 id="autosec-21">Gevolg G3</h6>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-21"></a>
+
+
+<p>
+<i>Door een rechte gaan oneindig veel vlakken.</i> <div class="oplossing"> Kies verschillende \(A,B\in a\). Voor ieder \(C\notin a\) bepaalt A3 een vlak \(\operatorname {vl}(ABC)\) dat \(a\) bevat (A4). Punten buiten
+elk reeds gekozen vlak leveren telkens een nieuw vlak.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./gevolg_g3.html" style="display:block; width:54vw; height:35vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 1 ......
+-->
+<h5 id="autosec-23">Oefening 1</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-23"></a>
+
+
+<p>
+Zijn de volgende uitspraken waar of onwaar? Verbeter de onware uitspraken.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Door drie punten gaat precies één vlak. <div class="oplossing"> Onwaar. Door drie <em>niet-collineaire</em> punten gaat precies één vlak (A3). Door drie collineaire punten gaan
+oneindig veel vlakken. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Als \(A\) en \(B\) twee verschillende punten van een vlak \(\alpha \) zijn, dan ligt de rechte \(AB\) in \(\alpha \). <div class="oplossing"> Waar. De rechte \(AB\) bestaat en is uniek
+volgens G2. Omdat \(A\) en \(B\) tot \(\alpha \) behoren, ligt \(AB\) volgens A4 in \(\alpha \). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Twee verschillende vlakken kunnen precies één punt gemeen hebben. <div class="oplossing"> Onwaar. Volgens A5 hebben twee verschillende vlakken geen punt gemeen of precies één
+rechte gemeen. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Door een rechte gaat precies één vlak. <div class="oplossing"> Onwaar. Door een rechte gaan oneindig veel vlakken (G3). </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Oefening 2 ......
+-->
+<h5 id="autosec-24">Oefening 2</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-24"></a>
+
+
+<p>
+Gegeven zijn drie niet-collineaire punten \(A\), \(B\) en \(C\). We stellen \(a=AB\) en \(\alpha =\operatorname {vl}(ABC)\). Vul aan met \(\in \), \(\notin \) of \(\subset \).
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> \(A\mathrel {\ldots }a\) <div class="oplossing"> \(A\in a\), want \(a=AB\). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> \(C\mathrel {\ldots }a\) <div class="oplossing"> \(C\notin a\), want \(A\), \(B\) en \(C\) zijn niet-collineair. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> \(a\mathrel {\ldots }\alpha \) <div class="oplossing"> \(a\subset \alpha \). De verschillende punten \(A\) en \(B\) behoren tot \(\alpha \), dus ligt \(AB\) volgens A4 volledig
+in \(\alpha \). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> \(C\mathrel {\ldots }\alpha \) <div class="oplossing"> \(C\in \alpha \), want \(\alpha =\operatorname {vl}(ABC)\). </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Oefening 3 ......
+-->
+<h5 id="autosec-25">Oefening 3</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-25"></a>
+
+
+<p>
+Welk axioma of gevolg rechtvaardigt elke uitspraak?
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Twee verschillende punten bepalen precies één rechte. <div class="oplossing"> Gevolg G2. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Drie niet-collineaire punten bepalen precies één vlak. <div class="oplossing"> Axioma A3. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Een rechte waarvan twee verschillende punten in een vlak liggen, ligt volledig in dat vlak. <div class="oplossing"> Axioma A4. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Twee verschillende vlakken met een gemeenschappelijk punt hebben een volledige rechte gemeen. <div class="oplossing"> Axioma A5. </div>
+</p>
+</li>
+</ul>
+<!--
+...... section Onderlinge ligging van punten, rechten en vlakken ......
+-->
+<h4 id="autosec-26"><span class="sectionnumber">II&#x2003;</span>Onderlinge ligging van punten, rechten en vlakken</h4>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-26"></a>
+<!--
+...... subsection Afspraken over evenwijdigheid ......
+-->
+<h5 id="autosec-27"><span class="sectionnumber">1&#x2003;</span>Afspraken over evenwijdigheid</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-27"></a>
+
+
+<p>
+We gebruiken in deze cursus het begrip <em>evenwijdig</em> in brede zin:
+</p>
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> twee rechten zijn evenwijdig als ze samenvallen of als ze coplanair zijn en geen punt gemeen hebben;
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> twee vlakken zijn evenwijdig als ze samenvallen of geen punt gemeen hebben;
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> een rechte en een vlak zijn evenwijdig als de rechte in het vlak ligt of geen punt met het vlak gemeen heeft.
+</p>
+</li>
+</ul>
+
+<p>
+Wanneer samenvallen uitgesloten is, vermelden we dat uitdrukkelijk.
+</p>
+<!--
+...... subsection Onderlinge ligging van twee vlakken ......
+-->
+<h5 id="autosec-28"><span class="sectionnumber">2&#x2003;</span>Onderlinge ligging van twee vlakken</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-28"></a>
+
+
+<p>
+Voor \(\alpha ,\beta \in \mathcal V\) zijn er volgens A5 precies drie mogelijkheden:
+</p>
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> \(\alpha \cap \beta =\alpha =\beta \): evenwijdig en samenvallend;
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(\alpha \cap \beta =\varnothing \): evenwijdig en niet-samenvallend;
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(\alpha \cap \beta =s\): snijdend, met snijlijn \(s\).
+</p>
+</li>
+</ul>
+
+<p>
+<div class="oplossing">
+</p>
+<div class="center">
+
+<p>
+<iframe src="./ligging_vlakken.html" style="display:block; width:76vw; height:38vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Onderlinge ligging van een rechte en een vlak ......
+-->
+<h5 id="autosec-30"><span class="sectionnumber">3&#x2003;</span>Onderlinge ligging van een rechte en een vlak</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-30"></a>
+
+
+<p>
+Voor een rechte \(a\) en een vlak \(\alpha \) zijn er precies drie mogelijkheden:
+</p>
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> \(a\cap \alpha =a\), dus \(a\subset \alpha \): \(a\) is evenwijdig met en ligt in \(\alpha \);
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(a\cap \alpha =\varnothing \): \(a\) is evenwijdig met, maar ligt niet in \(\alpha \);
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(a\cap \alpha =\{S\}\): \(a\) snijdt \(\alpha \) in \(S\).
+</p>
+</li>
+</ul>
+
+<p>
+<div class="oplossing"> Twee verschillende gemeenschappelijke punten zouden volgens A4 de volledige rechte in het vlak dwingen.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./ligging_rechte_vlak.html" style="display:block; width:76vw; height:38vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Onderlinge ligging van twee rechten ......
+-->
+<h5 id="autosec-32"><span class="sectionnumber">4&#x2003;</span>Onderlinge ligging van twee rechten</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-32"></a>
+
+
+<p>
+Voor rechten \(a\) en \(b\) zijn er vier mogelijkheden:
+</p>
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> \(a\cap b=a=b\): evenwijdig en samenvallend;
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(a\cap b=\{S\}\): snijdend in \(S\);
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(a\cap b=\varnothing \) en \(a,b\) zijn coplanair: evenwijdig;
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(a\cap b=\varnothing \) en \(a,b\) zijn niet coplanair: kruisend.
+</p>
+</li>
+</ul>
+
+<p>
+<div class="oplossing">
+</p>
+<div class="center">
+
+<p>
+<iframe src="./ligging_rechten.html" style="display:block; width:76vw; height:40vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 4 ......
+-->
+<h5 id="autosec-34">Oefening 4</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-34"></a>
+
+
+<p>
+<div class=oefening-met-figuur>
+</p>
+<div class="minipage" style="vertical-align:bottom ; justify-content:flex-start ; width:316pt ; ">
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-35"></a>
+
+<p>
+Beschouw de kubus \(ABCD.EFGH\). Bepaal telkens de onderlinge ligging.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Zijn \(E\) en \(AE\)
+incident? Is \(H\) incident met \(\operatorname {vl}(BCG)\)?
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> De rechten \(AB\) en
+\(HG\); de rechten \(AC\) en \(FH\).
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> De rechte \(AG\) en
+het vlak \(BCGF\); de rechte \(EH\) en het vlak \(BCGF\).
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> De vlakken \(ABCD\)
+en \(EFGH\); de vlakken \(ABFE\) en \(BCGF\).
+</p>
+</li>
+</ul>
+
+</div>
+<div class="minipage" style="vertical-align:bottom ; justify-content:flex-start ; width:160pt ; ">
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-36"></a>
+
+<p>
+<iframe data-vast src="./oefening_kubus.html" style="display:block; width:28vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+
+
+</div>
+
+<p>
+</div> <div class="oplossing">
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> \(E\in AE\), dus \(E\) en \(AE\) zijn incident. Omdat \(H\notin \operatorname {vl}(BCG)\), zijn \(H\) en \(\operatorname {vl}(BCG)\) niet incident.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> \(AB\parallel HG\) en de rechten vallen niet samen; \(AC\) en \(FH\) zijn kruisend.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> \(AG\) snijdt \(BCGF\) in \(G\); \(EH\) is evenwijdig met \(BCGF\) en ligt niet in dat vlak.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> \(ABCD\parallel EFGH\) en de vlakken vallen niet samen; \(ABFE\cap BCGF=BF\).
+</p>
+</li>
+</ul>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 5 ......
+-->
+<h5 id="autosec-37">Oefening 5</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-37"></a>
+
+
+<p>
+<div class=oefening-met-figuur>
+</p>
+<div class="minipage" style="vertical-align:bottom ; justify-content:flex-start ; width:316pt ; ">
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-38"></a>
+
+<p>
+Beschouw het driehoekig prisma \(ABC.DEF\), met opstaande ribben \(AD\), \(BE\) en \(CF\). Bepaal telkens de onderlinge ligging.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Zijn \(D\) en \(AD\)
+incident? Is \(F\) incident met \(\operatorname {vl}(ABE)\)?
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> De rechten \(AB\) en
+\(DE\); de rechten \(AC\) en \(BE\).
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> De rechte \(CF\) en
+het vlak \(ABC\).
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> De vlakken \(ABC\) en
+\(DEF\); de vlakken \(ABED\) en \(ACFD\).
+</p>
+</li>
+</ul>
+
+</div>
+<div class="minipage" style="vertical-align:bottom ; justify-content:flex-start ; width:160pt ; ">
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-39"></a>
+
+<p>
+<iframe data-vast src="./oefening_prisma.html" style="display:block; width:28vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+
+
+</div>
+
+<p>
+</div> <div class="oplossing">
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> \(D\in AD\), dus \(D\) en \(AD\) zijn incident. Omdat \(F\notin \operatorname {vl}(ABE)\), zijn \(F\) en \(\operatorname {vl}(ABE)\) niet incident.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> \(AB\parallel DE\) en de rechten vallen niet samen; \(AC\) en \(BE\) zijn kruisend.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> \(CF\) snijdt \(ABC\) in \(C\).
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> \(ABC\parallel DEF\) en de vlakken vallen niet samen; \(ABED\cap ACFD=AD\).
+</p>
+</li>
+</ul>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 6 ......
+-->
+<h5 id="autosec-40">Oefening 6</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-40"></a>
+
+
+<p>
+<div class=oefening-met-figuur>
+</p>
+<div class="minipage" style="vertical-align:bottom ; justify-content:flex-start ; width:316pt ; ">
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-41"></a>
+
+<p>
+Beschouw de piramide \(T.ABCD\) met vierkant grondvlak \(ABCD\). Bepaal telkens de onderlinge ligging.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Is \(T\) incident met
+\(\operatorname {vl}(ABC)\)? Zijn \(A\) en \(TD\) incident?
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> De rechten \(AB\) en
+\(CD\); de rechten \(AC\) en \(TB\).
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> De rechte \(TA\) en
+het vlak \(ABCD\).
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> De vlakken \(TAB\) en
+\(TBC\); de vlakken \(TAB\) en \(ABCD\).
+</p>
+</li>
+</ul>
+
+</div>
+<div class="minipage" style="vertical-align:bottom ; justify-content:flex-start ; width:160pt ; ">
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-42"></a>
+
+<p>
+<iframe data-vast src="./oefening_piramide.html" style="display:block; width:28vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+
+
+</div>
+
+<p>
+</div> <div class="oplossing">
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> \(T\notin \operatorname {vl}(ABC)\) en \(A\notin TD\), dus in beide gevallen is er geen incidentie.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> \(AB\parallel CD\) en de rechten vallen niet samen; \(AC\) en \(TB\) zijn kruisend.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> \(TA\) snijdt \(ABCD\) in \(A\).
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> \(TAB\cap TBC=TB\) en \(TAB\cap ABCD=AB\).
+</p>
+</li>
+</ul>
+
+<p>
+</div>
+</p>
+<!--
+...... section Eerste stellingen ......
+-->
+<h4 id="autosec-43"><span class="sectionnumber">III&#x2003;</span>Eerste stellingen</h4>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-43"></a>
+<!--
+...... subsection Stelling S1 ......
+-->
+<h5 id="autosec-44"><span class="sectionnumber">1&#x2003;</span>Stelling S1</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-44"></a>
+
+
+<p>
+<i>Twee snijdende rechten \(a\) en \(b\) bepalen precies één vlak.</i> <div class="oplossing"> Stel \(a\cap b=\{S\}\). Kies \(A\in a\setminus \{S\}\) en \(B\in b\setminus \{S\}\). De niet-collineaire punten \(A,S,B\)
+bepalen door A3 precies één vlak. Door A4 bevat dit vlak \(a\) en \(b\). Elk ander vlak met beide rechten bevat \(A,S,B\) en valt er dus mee samen.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_s1.html" style="display:block; width:48vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling S2 ......
+-->
+<h5 id="autosec-46"><span class="sectionnumber">2&#x2003;</span>Stelling S2</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-46"></a>
+
+
+<p>
+<i>Een rechte \(a\) en een punt \(A\notin a\) bepalen precies één vlak.</i> <div class="oplossing"> Kies verschillende \(B,C\in a\). Dan zijn \(A,B,C\) niet-collineair en bepalen ze volgens A3 precies één vlak. A4 geeft
+\(a\subset \operatorname {vl}(ABC)\). Ieder vlak door \(A\) en \(a\) bevat \(A,B,C\) en valt ermee samen.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_s2.html" style="display:block; width:48vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling S3 ......
+-->
+<h5 id="autosec-48"><span class="sectionnumber">3&#x2003;</span>Stelling S3</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-48"></a>
+
+
+<p>
+<i>Twee evenwijdige, niet-samenvallende rechten bepalen precies één vlak.</i> <div class="oplossing"> Volgens de definitie zijn evenwijdige rechten coplanair. Kies \(A,B\in a\) verschillend en \(C\in b\). Ze bepalen één vlak
+\(\alpha \). A4 geeft \(a\subset \alpha \); in \(\alpha \) ligt door \(C\) precies één rechte evenwijdig met \(a\) (A2), namelijk \(b\). De uniciteit volgt opnieuw uit A3.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_s3.html" style="display:block; width:48vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 7 ......
+-->
+<h5 id="autosec-50">Oefening 7</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-50"></a>
+
+
+<p>
+Bepaal telkens of de gegeven informatie precies één vlak vastlegt. Noteer bij elk bevestigend antwoord het bijbehorende axioma of de bijbehorende stelling.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Drie niet-collineaire punten \(A\), \(B\) en \(C\). <div class="oplossing"> Ja. Volgens A3 bepalen drie niet-collineaire punten precies één vlak: \(\operatorname {vl}(ABC)\). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Twee snijdende rechten \(a\) en \(b\). <div class="oplossing"> Ja. Volgens S1 bepalen twee snijdende rechten precies één vlak. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Een rechte \(a\) en een punt \(P\notin a\). <div class="oplossing"> Ja. Volgens S2 bepalen een rechte en een punt buiten die rechte precies één vlak: \(\operatorname {vl}(Pa)\).
+</div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Twee evenwijdige, niet-samenvallende rechten \(a\) en \(b\). <div class="oplossing"> Ja. Volgens S3 bepalen twee evenwijdige, niet-samenvallende rechten precies één vlak. </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Oefening 8 ......
+-->
+<h5 id="autosec-51">Oefening 8</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-51"></a>
+
+
+<p>
+Bepaal telkens of de gegevens precies één vlak vastleggen. Verantwoord je antwoord en vermeld waar mogelijk bijhorende axioma’s of stellingen.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Een rechte \(a\) en een punt \(P\in a\). <div class="oplossing"> Nee. S2 is niet toepasbaar, want \(P\) ligt op \(a\). De gegevens leggen enkel de rechte \(a\) vast en door die rechte
+gaan volgens G3 oneindig veel vlakken. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Twee kruisende rechten \(a\) en \(b\). <div class="oplossing"> Nee. Kruisende rechten zijn niet-coplanair, dus er bestaat geen vlak dat beide rechten bevat. S1 en S3 zijn niet toepasbaar.
+</div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Snijdende rechten \(a\) en \(b\), samen met een punt \(P\) dat niet in het door \(a\) en \(b\) bepaalde vlak ligt. <div class="oplossing"> Nee. Volgens S1 bepalen \(a\) en \(b\) precies
+één vlak, maar \(P\) ligt niet in dat vlak. Er bestaat dus geen vlak dat alle gegeven objecten bevat. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> De rechten \(a\) en \(b\) zijn evenwijdig en vallen niet samen. Bovendien geldt \(P\in a\). <div class="oplossing"> Ja. Volgens S3 bepalen \(a\) en \(b\) precies één vlak. Het punt
+\(P\) levert geen bijkomende beperking, want het ligt al op \(a\). </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Stelling S4 ......
+-->
+<h5 id="autosec-52"><span class="sectionnumber">4&#x2003;</span>Stelling S4</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-52"></a>
+
+
+<p>
+<i>Door \(A\notin a\) gaat precies één rechte evenwijdig met \(a\).</i> <div class="oplossing"> S2 bepaalt \(\operatorname {vl}(Aa)\). In dit vlak geldt volgens A2 het parallellenaxioma van de vlakke meetkunde.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_s4.html" style="display:block; width:48vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling S5 ......
+-->
+<h5 id="autosec-54"><span class="sectionnumber">5&#x2003;</span>Stelling S5</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-54"></a>
+
+
+<p>
+<i>Twee verschillende vlakken die \(A\) gemeen hebben, snijden elkaar en \(A\) behoort tot hun snijlijn.</i> <div class="oplossing"> De vlakken zijn niet samenvallend en hun doorsnede is niet leeg. Volgens A5 is de doorsnede
+een rechte \(s\). Omdat \(A\) tot beide vlakken behoort, geldt \(A\in s\).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_s5.html" style="display:block; width:48vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling S6 ......
+-->
+<h5 id="autosec-56"><span class="sectionnumber">6&#x2003;</span>Stelling S6</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-56"></a>
+
+
+<p>
+<i>Ligt een rechte in een van twee evenwijdige vlakken, dan is ze evenwijdig met het andere vlak.</i> <div class="oplossing"> Stel \(a\subset \alpha \) en \(\alpha \parallel \beta \). Als \(a\) een punt met \(\beta \)
+gemeen had, hadden \(\alpha \) en \(\beta \) een punt gemeen. Niet-samenvallende parallelle vlakken zijn disjunct, dus \(a\cap \beta =\varnothing \). Bij samenvallen ligt \(a\) in beide vlakken. In beide gevallen is
+\(a\parallel \beta \).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_s6.html" style="display:block; width:48vw; height:30vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 9 ......
+-->
+<h5 id="autosec-58">Oefening 9</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-58"></a>
+
+
+<p>
+Beantwoord telkens de vraag en verantwoord je antwoord met behulp van de passende stellingen of axioma’s.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Door een punt \(P\) buiten een rechte \(a\) trekt men twee verschillende rechten \(b\) en \(c\). Kunnen \(b\) en \(c\) allebei evenwijdig zijn met \(a\)? <div class="oplossing"> Nee.
+Volgens S4 gaat er door een punt \(P\notin a\) precies één rechte evenwijdig met \(a\). De rechten \(b\) en \(c\) kunnen dus niet allebei evenwijdig zijn met \(a\). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Twee verschillende vlakken \(\alpha \) en \(\beta \) hebben een punt \(P\) gemeen. Kunnen \(\alpha \) en \(\beta \) elkaar in precies één punt snijden? <div class="oplossing">
+Nee. Volgens S5 (steunend op A5) snijden twee verschillende vlakken met een gemeenschappelijk punt \(P\) elkaar volgens een rechte \(s\) met \(P\in s\). Hun doorsnede bevat dus oneindig veel punten. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Gegeven zijn twee evenwijdige, niet-samenvallende vlakken \(\alpha \) en \(\beta \). Een rechte \(a\) ligt in \(\alpha \). Kan \(a\) een punt gemeen hebben met \(\beta \)? <div
+class="oplossing"> Nee. Omdat \(a\subset \alpha \) en \(\alpha \parallel \beta \), geldt volgens S6 dat \(a\parallel \beta \). Aangezien \(\alpha \) en \(\beta \) disjunct zijn, geldt \(a\cap \beta =\varnothing
+\). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Gegeven is een vlak \(\alpha \) en een rechte \(a\subset \alpha \). Hoeveel rechten gaan er door een punt \(P\notin \alpha \) die evenwijdig zijn met \(a\)? <div
+class="oplossing"> Precies één rechte. Omdat \(P\notin \alpha \) en \(a\subset \alpha \), geldt zeker \(P\notin a\). Volgens S4 gaat er door \(P\) precies één rechte evenwijdig met \(a\). </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Oefening 10 ......
+-->
+<h5 id="autosec-59">Oefening 10</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-59"></a>
+
+
+<p>
+Onderzoek de volgende situaties. Toon de eigenschap aan of beantwoord de vraag, en vermeld telkens de gebruikte stellingen en axioma’s.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Twee verschillende vlakken \(\alpha \) en \(\beta \) hebben twee verschillende punten \(A\) en \(B\) gemeen. Toon aan dat de rechte \(AB\) de snijlijn is van \(\alpha \) en \(\beta
+\). <div class="oplossing"> Omdat \(\alpha \neq \beta \) en \(A\in \alpha \cap \beta \), snijden \(\alpha \) en \(\beta \) elkaar volgens een rechte \(s\) met \(A\in s\) (S5). Omdat ook \(B\in \alpha \cap \beta
+\), geldt eveneens \(B\in s\). Volgens A1 is er door de twee verschillende punten \(A\) en \(B\) precies één rechte, zodat de snijlijn samenvalt met \(AB\). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Een rechte \(a\) ligt in \(\alpha \) en een rechte \(b\) ligt in \(\beta \), waarbij \(\alpha \parallel \beta \) en \(\alpha \neq \beta \). Kunnen \(a\) en \(b\) elkaar snijden?
+<div class="oplossing"> Nee. Volgens S6 geldt \(a\parallel \beta \), dus \(a\cap \beta =\varnothing \). Omdat \(b\subset \beta \), is \(a\cap b\subset a\cap \beta =\varnothing \). De rechten \(a\) en \(b\)
+hebben geen gemeenschappelijk punt en kunnen elkaar dus niet snijden (ze zijn evenwijdig of kruisend). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Twee verschillende evenwijdige vlakken \(\alpha \) en \(\beta \) worden gesneden door een derde vlak \(\gamma \) volgens respectievelijk de rechten \(a\) en \(b\). Toon aan dat
+\(a\parallel b\). <div class="oplossing"> Er geldt \(a\subset \alpha \) en \(\alpha \parallel \beta \), dus volgens S6 is \(a\parallel \beta \), waaruit volgt dat \(a\cap \beta =\varnothing \). Omdat \(b\subset
+\beta \), hebben \(a\) en \(b\) geen gemeenschappelijk punt (\(a\cap b=\varnothing \)). Aangezien \(a\) en \(b\) beide in \(\gamma \) liggen, zijn ze coplanair en hebben ze geen snijpunt; bijgevolg is \(a\parallel b\).
+</div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Door een punt \(A\notin a\) trekt men \(b\parallel a\), en door een punt \(B\notin a\) trekt men \(c\parallel a\). Veronderstel dat \(b\) en \(c\) elkaar snijden in een punt
+\(S\). Wat kun je besluiten over de rechten \(b\) en \(c\)? <div class="oplossing"> Door het snijpunt \(S\) gaan zowel \(b\) als \(c\), en beide zijn evenwijdig met \(a\). Volgens S4 gaat er door een punt echter precies één
+rechte evenwijdig met een gegeven rechte. Bijgevolg moeten \(b\) en \(c\) samenvallen (\(b=c\)). </div>
+</p>
+</li>
+</ul>
+<!--
+...... section Voorstelling van ruimtelijke figuren op een tekenvlak ......
+-->
+<h4 id="autosec-60"><span class="sectionnumber">IV&#x2003;</span>Voorstelling van ruimtelijke figuren op een tekenvlak</h4>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-60"></a>
+<!--
+...... subsection Tekenafspraken ......
+-->
+<h5 id="autosec-61"><span class="sectionnumber">1&#x2003;</span>Tekenafspraken</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-61"></a>
+
+
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> Een vlak stellen we voor door een parallellogram; elementen van het vlak tekenen we erin.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> Evenwijdige rechten in de ruimte tekenen we evenwijdig.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> Bij snijdende rechten markeren we het snijpunt. Bij kruisende rechten onderbreken we de achterste rechte nabij de schijnbare kruising.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> Onzichtbare delen van rechten en ribben tekenen we gestreept.
+</p>
+</li>
+</ul>
+
+<p>
+<div class="oplossing">
+</p>
+<div class="center">
+
+<p>
+<iframe data-vast src="./tekenafspraken.html" style="display:block; width:70vw; height:42vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Voorbeeld: een snijlijn construeren ......
+-->
+<h5 id="autosec-63"><span class="sectionnumber">2&#x2003;</span>Voorbeeld: een snijlijn construeren</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-63"></a>
+
+
+<p>
+De verschillende vlakken \(\alpha \) en \(\beta \) bevatten het punt \(A\). In \(\alpha \) ligt de rechte \(a\) en in \(\beta \) ligt de rechte \(b\). De rechten \(a\) en \(b\) snijden in \(B\ne A\). Construeer en verantwoord
+de snijlijn van \(\alpha \) en \(\beta \). <div class="oplossing"> De punten \(A\) en \(B\) liggen in beide vlakken: \(A\) is gegeven als gemeenschappelijk punt en \(B\in a\subset \alpha \) en \(B\in b\subset \beta \).
+Omdat \(A\ne B\), bepalen ze de gezochte snijlijn:
+</p>
+
+<p>
+\[ \alpha \cap \beta =AB. \]
+</p>
+<div class="center">
+
+<p>
+<iframe src="./snijlijn_ab.html" style="display:block; width:70vw; height:42vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 11 ......
+-->
+<h5 id="autosec-65">Oefening 11</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-65"></a>
+
+
+<p>
+De verschillende rechten \(u\) en \(v\) snijden elkaar in het punt \(Q\). Een vlak \(\beta \), met \(Q\notin \beta \), snijdt \(u\) in \(U\) en \(v\) in \(V\). Kies in \(\beta \) punten \(E\ne V\) en \(F\ne U\) zodat de
+verschillende rechten \(EV\) en \(FU\) niet evenwijdig zijn.
+</p>
+
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Geef een vlakke voorstelling van deze gegevens.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Teken op verantwoorde wijze (met bewijs) de snijlijn van de vlakken \(\operatorname {vl}(Ev)\) en \(\operatorname {vl}(Fu)\).
+</p>
+</li>
+</ul>
+
+<p>
+<div class="oplossing">
+</p>
+<div class="center">
+
+<p>
+<iframe src="./snijlijn_qw.html" style="display:block; width:62vw; height:36vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+We zoeken \(s=\operatorname {vl}(Ev)\cap \operatorname {vl}(Fu)\).
+</p>
+
+<p>
+Omdat \(Q\in v\), geldt \(Q\in \operatorname {vl}(Ev)\). Omdat \(Q\in u\), geldt ook \(Q\in \operatorname {vl}(Fu)\). Het punt \(Q\) ligt dus in beide vlakken.
+</p>
+
+<p>
+De rechte \(EV\) ligt in \(\operatorname {vl}(Ev)\): het punt \(E\) ligt per definitie in dit vlak en \(V\in v\subset \operatorname {vl}(Ev)\). Bovendien ligt \(EV\) in \(\beta \). Analoog ligt \(FU\) zowel in
+\(\operatorname {vl}(Fu)\) als in \(\beta \).
+</p>
+
+<p>
+De rechten \(EV\) en \(FU\) zijn verschillend en niet evenwijdig. Ze snijden elkaar daarom in een punt \(W=EV\cap FU\). Daaruit volgt \(W\in \operatorname {vl}(Ev)\) en \(W\in \operatorname {vl}(Fu)\).
+</p>
+
+<p>
+De twee vlakken zijn verschillend. Anders zou hun gemeenschappelijke vlak de snijdende rechten \(EV\) en \(FU\) bevatten en dus gelijk zijn aan \(\beta \). Dat is onmogelijk, want het bevat ook \(Q\), terwijl \(Q\notin \beta \).
+</p>
+
+<p>
+De verschillende punten \(Q\) en \(W\) liggen in beide verschillende vlakken. Zij bepalen bijgevolg de gezochte snijlijn:
+</p>
+
+<p>
+\[ \boxed {s=QW}.     \]
+</p>
+
+<p>
+</div>
+</p>
+<!--
+...... section Evenwijdigheid ......
+-->
+<h4 id="autosec-67"><span class="sectionnumber">V&#x2003;</span>Evenwijdigheid</h4>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-67"></a>
+
+
+<p>
+Hier betekent \(a\parallel \alpha \) dat \(a\) in \(\alpha \) ligt of er geen punt mee gemeen heeft.
+</p>
+<!--
+...... subsection Stelling E1 ......
+-->
+<h5 id="autosec-68"><span class="sectionnumber">1&#x2003;</span>Stelling E1</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-68"></a>
+
+
+<p>
+<i>Snijdt een vlak een van twee evenwijdige rechten, dan snijdt het ook de andere rechte.</i> <div class="oplossing">
+</p>
+
+<p>
+\[a\parallel b,\quad \alpha \cap a=\{A\} \Longrightarrow \exists B:\alpha \cap b=\{B\}.\]
+</p>
+
+<p>
+In \(\gamma =\operatorname {vl}(ab)\) gaat de snijlijn \(s=\alpha \cap \gamma \) door \(A\). De vlakke rechte \(s\) snijdt \(a\) en dus ook haar evenwijdige \(b\).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e1.html" style="display:block; width:54vw; height:30vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling E2 ......
+-->
+<h5 id="autosec-70"><span class="sectionnumber">2&#x2003;</span>Stelling E2</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-70"></a>
+
+
+<p>
+<i>Als een rechte evenwijdig is met een rechte van een vlak, is zij evenwijdig met dat vlak.</i> <div class="oplossing">
+</p>
+
+<p>
+\[b\subset \alpha ,\quad a\parallel b\Longrightarrow a\parallel \alpha .\]
+</p>
+
+<p>
+Als \(a\) niet in \(\alpha \) ligt maar het vlak toch snijdt, zou E1 impliceren dat \(b\) het vlak in precies één punt snijdt, strijdig met \(b\subset \alpha \).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e2.html" style="display:block; width:54vw; height:30vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling E3 ......
+-->
+<h5 id="autosec-72"><span class="sectionnumber">3&#x2003;</span>Stelling E3</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-72"></a>
+
+
+<p>
+<i>Als \(a\parallel \alpha \) en men door \(P\in \alpha \) een rechte \(b\parallel a\) trekt, dan ligt \(b\) in \(\alpha \).</i> <div class="oplossing">
+</p>
+
+<p>
+\[a\parallel \alpha ,\ P\in \alpha ,\ P\in b,\ b\parallel a \Longrightarrow b\subset \alpha .\]
+</p>
+
+<p>
+Als \(a\subset \alpha \), volgt dit uit het parallellenaxioma in \(\alpha \). Anders is \(a\cap \alpha =\varnothing \). Neem dan \(\gamma =\operatorname {vl}(aP)\). De snijlijn \(\gamma \cap \alpha \) gaat door
+\(P\) en is evenwijdig met \(a\); door de uniciteit in S4 is ze \(b\).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e3.html" style="display:block; width:54vw; height:30vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling E4 ......
+-->
+<h5 id="autosec-74"><span class="sectionnumber">4&#x2003;</span>Stelling E4</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-74"></a>
+
+
+<p>
+<i>Evenwijdigheid in \(\mathcal R\) is een equivalentierelatie.</i> <div class="oplossing"> <b>Gegeven</b>&#x2003;\(a,b,c\in \mathcal R\).
+</p>
+
+<p>
+<b>Te bewijzen</b>&#x2003;Evenwijdigheid in \(\mathcal R\) is reflexief, symmetrisch en transitief:
+</p>
+
+<p>
+\[a\parallel a,\qquad a\parallel b\Rightarrow b\parallel a,\qquad (a\parallel b\land b\parallel c)\Rightarrow a\parallel c.\]
+</p>
+
+<p>
+<b>Bewijs</b>&#x2003;Reflexiviteit en symmetrie volgen uit de definitie. Transitiviteit volgt uit de uniciteit van de parallelle rechte door een punt (S4).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e4.html" style="display:block; width:48vw; height:28vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 12 ......
+-->
+<h5 id="autosec-76">Oefening 12</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-76"></a>
+
+
+<p>
+Zijn de volgende uitspraken waar of onwaar? Verbeter de onware uitspraken en vermeld telkens de gebruikte stelling.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Snijdt een vlak \(\alpha \) een rechte \(a\) in precies één punt, en is \(b\parallel a\), dan snijdt \(\alpha \) ook \(b\) in precies één punt. <div class="oplossing"> Waar. Dat is
+stelling E1. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Als \(a\parallel \alpha \), dan is \(a\) evenwijdig met elke rechte van \(\alpha \). <div class="oplossing"> Onwaar. Ligt \(a\) niet in \(\alpha \), dan zijn de rechten van \(\alpha
+\) die niet in de richting van \(a\) lopen kruisend met \(a\). Correct is: er ligt in \(\alpha \) door elk punt precies één rechte evenwijdig met \(a\) (E3). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Is \(a\) evenwijdig met een rechte \(b\) van een vlak \(\alpha \), dan is \(a\parallel \alpha \). <div class="oplossing"> Waar. Dat is stelling E2. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Als \(a\parallel b\) en \(b\parallel c\), dan kunnen \(a\) en \(c\) kruisend zijn. <div class="oplossing"> Onwaar. Evenwijdigheid in \(\mathcal R\) is transitief (E4), dus
+\(a\parallel c\). Kruisende rechten zijn niet coplanair en dus niet evenwijdig. </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Oefening 13 ......
+-->
+<h5 id="autosec-77">Oefening 13</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-77"></a>
+
+
+<p>
+Onderzoek de volgende situaties. Verantwoord elke stap met een axioma of een stelling.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Gegeven zijn \(a\parallel \alpha \) en een punt \(P\in \alpha \). Hoeveel rechten door \(P\) zijn evenwijdig met \(a\), en waar liggen ze? <div class="oplossing"> Precies één.
+Volgens S4 gaat er door \(P\) hoogstens één rechte \(b\) evenwijdig met \(a\), en volgens E3 ligt die rechte \(b\) volledig in \(\alpha \). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> De rechten \(a\) en \(b\) zijn allebei evenwijdig met eenzelfde vlak \(\alpha \). Wat besluit je over de onderlinge ligging van \(a\) en \(b\)? <div class="oplossing"> Niets: alle
+liggingen blijven mogelijk. Neem in de kubus \(ABCD.EFGH\) het vlak \(\alpha =ABCD\). Dan zijn \(EF\) en \(HG\) evenwijdig, snijden \(EF\) en \(FG\) elkaar in \(F\), en zijn \(AB\) en \(EH\) kruisend, terwijl al deze rechten
+evenwijdig zijn met \(\alpha \). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Gegeven zijn \(a\parallel b\), \(a\subset \alpha \) en \(b\not \subset \alpha \). Toon aan dat \(b\cap \alpha =\varnothing \). <div class="oplossing"> Uit \(a\subset
+\alpha \) en \(b\parallel a\) volgt \(b\parallel \alpha \) (E2). Volgens de conventie betekent dit dat \(b\) in \(\alpha \) ligt of geen punt met \(\alpha \) gemeen heeft. Het eerste is uitgesloten, dus \(b\cap \alpha
+=\varnothing \). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Gegeven zijn \(a\parallel \alpha \) en \(a\not \subset \alpha \). Toon aan dat er in \(\alpha \) oneindig veel rechten liggen die evenwijdig zijn met \(a\), en dat die rechten
+onderling evenwijdig zijn. <div class="oplossing"> Door elk punt \(P\in \alpha \) gaat volgens S4 precies één rechte evenwijdig met \(a\), en die ligt volgens E3 in \(\alpha \). Kies \(P\) telkens buiten de reeds gevonden
+rechten: dat levert oneindig veel verschillende rechten. Ze zijn alle evenwijdig met \(a\) en dus onderling evenwijdig (E4). </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Stelling E5 ......
+-->
+<h5 id="autosec-78"><span class="sectionnumber">5&#x2003;</span>Stelling E5</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-78"></a>
+
+
+<p>
+<i>Als een rechte evenwijdig is met twee snijdende vlakken, is ze evenwijdig met hun snijlijn.</i> <div class="oplossing">
+</p>
+
+<p>
+\[a\parallel \alpha ,\quad a\parallel \beta ,\quad \alpha \cap \beta =s\Longrightarrow a\parallel s.\]
+</p>
+
+<p>
+Neem \(P\in s\). De unieke rechte door \(P\) evenwijdig met \(a\) ligt door E3 zowel in \(\alpha \) als in \(\beta \) en is dus \(s\).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e5.html" style="display:block; width:54vw; height:32vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Gevolg van E5 ......
+-->
+<h5 id="autosec-80">Gevolg van E5</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-80"></a>
+
+
+<p>
+<div class="oplossing">
+</p>
+
+<p>
+\[\alpha \parallel \alpha &apos;,\ \beta \parallel \beta &apos;,\ \alpha \cap \beta =s,\ \alpha &apos;\cap \beta &apos;=s&apos;\Longrightarrow s\parallel s&apos;.\]
+</p>
+
+<p>
+Omdat \(s\subset \alpha \parallel \alpha &apos;\) en \(s\subset \beta \parallel \beta &apos;\), is \(s\) evenwijdig met beide vlakken \(\alpha &apos;,\beta &apos;\). E5 geeft \(s\parallel s&apos;\).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./gevolg_e5.html" style="display:block; width:54vw; height:32vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling E6 ......
+-->
+<h5 id="autosec-82"><span class="sectionnumber">6&#x2003;</span>Stelling E6</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-82"></a>
+
+
+<p>
+<i>Als door \(a\parallel \alpha \) een vlak \(\beta \) gaat dat \(\alpha \) snijdt, dan is de snijlijn evenwijdig met de gegeven rechte.</i> <div class="oplossing"> Gegeven zijn \(a\parallel \alpha \), \(a\subset \beta
+\) en \(\alpha \cap \beta =s\). Dan geldt \(a\parallel s\). De coplanaire rechten \(a,s\subset \beta \) kunnen niet snijden, want dan had \(a\) een punt van \(\alpha \). Ze zijn dus evenwijdig (met samenvallen
+toegelaten).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e6.html" style="display:block; width:54vw; height:32vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling E7 ......
+-->
+<h5 id="autosec-84"><span class="sectionnumber">7&#x2003;</span>Stelling E7</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-84"></a>
+
+
+<p>
+<i>Als twee snijdende rechten van een vlak evenwijdig zijn met een tweede vlak, dan zijn de vlakken evenwijdig.</i> <div class="oplossing">
+</p>
+
+<p>
+\[a,b\subset \alpha ,\ a\cap b=\{P\},\ a\parallel \beta ,\ b\parallel \beta \Longrightarrow \alpha \parallel \beta .\]
+</p>
+
+<p>
+Bij een snijlijn \(s=\alpha \cap \beta \) zouden \(a\) en \(b\) volgens E6 beide evenwijdig zijn met \(s\), en dus met elkaar. Dat strijdt met hun snijpunt.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e7.html" style="display:block; width:54vw; height:32vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling E8 ......
+-->
+<h5 id="autosec-86"><span class="sectionnumber">8&#x2003;</span>Stelling E8</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-86"></a>
+
+
+<p>
+<i>Door \(P\) gaat precies één vlak \(\beta \parallel \alpha \). Alle rechten door \(P\) die evenwijdig zijn met \(\alpha \), liggen in \(\beta \).</i> <div class="oplossing"> <b>Gegeven</b>&#x2003;\(\alpha \in
+\mathcal V\) en \(P\in \Sigma \).
+</p>
+
+<p>
+<b>Te bewijzen</b>&#x2003;Er bestaat precies één vlak \(\beta \) door \(P\) dat evenwijdig is met \(\alpha \):
+</p>
+
+<p>
+\[\exists !\beta \in \mathcal V:\quad P\in \beta \ \land \ \beta \parallel \alpha .\]
+</p>
+
+<p>
+Bovendien ligt elke rechte door \(P\) die evenwijdig is met \(\alpha \) in \(\beta \).
+</p>
+
+<p>
+<b>Bewijs</b>&#x2003;Kies snijdende \(a,b\subset \alpha \). Trek door \(P\) de unieke rechten \(a&apos;\parallel a\) en \(b&apos;\parallel b\). Zij bepalen \(\beta =\operatorname {vl}(a&apos;b&apos;)\); E7
+geeft \(\beta \parallel \alpha \). De uniciteit en de tweede uitspraak volgen uit E3 en de uniciteit van de parallelle rechten.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e8.html" style="display:block; width:62vw; height:40vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Gevolgen van E8 ......
+-->
+<h5 id="autosec-88">Gevolgen van E8</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-88"></a>
+
+
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">1.</span> Als een vlak een van twee evenwijdige vlakken snijdt, snijdt het ook het andere. <div class="oplossing"> \(\alpha \parallel \beta \) en \(\gamma \cap \alpha =s\) impliceren
+\(\gamma \cap \beta =t\); anders zou de uniciteit van het parallelle vlak uit E8 worden tegengesproken. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">2.</span> Als een rechte een van twee evenwijdige vlakken snijdt, snijdt ze ook het andere. <div class="oplossing">
+</p>
+<p>
+\[\alpha \parallel \beta ,\quad r\cap \alpha =\{A\} \Longrightarrow \exists B:\ r\cap \beta =\{B\}.\]
+</p>
+<p>
+Neem een vlak door \(r\) en pas het vorige gevolg en vervolgens de vlakke evenwijdigheid toe. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">3.</span> Door \(r\parallel \alpha \) gaat precies één vlak evenwijdig met \(\alpha \). <div class="oplossing"> Kies \(P\in r\). Het unieke vlak door \(P\) evenwijdig met \(\alpha \) bevat
+door E8 heel \(r\). Een tweede bevat ook \(P\) en valt er dus mee samen. </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Stelling E9 ......
+-->
+<h5 id="autosec-89"><span class="sectionnumber">9&#x2003;</span>Stelling E9</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-89"></a>
+
+
+<p>
+<i>Als twee evenwijdige vlakken door een derde vlak gesneden worden, zijn de snijlijnen evenwijdig.</i> <div class="oplossing"> Als \(\alpha =\beta \), dan is \(s=t\) en is de uitspraak onmiddellijk waar. Neem dus \(\alpha
+\cap \beta =\varnothing \).
+</p>
+
+<p>
+\[\alpha \parallel \beta ,\quad \gamma \cap \alpha =s,\quad \gamma \cap \beta =t\Longrightarrow s\parallel t.\]
+</p>
+
+<p>
+\(s\) en \(t\) liggen in \(\gamma \) en kunnen niet snijden, want hun snijpunt zou tot de disjuncte vlakken \(\alpha \) en \(\beta \) behoren.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e9.html" style="display:block; width:54vw; height:32vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Gevolg van E9 ......
+-->
+<h5 id="autosec-91">Gevolg van E9</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-91"></a>
+
+
+<p>
+<i>Twee evenwijdige rechten die twee niet-samenvallende evenwijdige vlakken snijden, bepalen vier hoekpunten van een parallellogram.</i> <div class="oplossing"> Noem de snijpunten op \(a\) respectievelijk \(A,D\) en op \(b\)
+respectievelijk \(B,C\). Dan is \(AD\parallel BC\) omdat \(a\parallel b\). E9 toegepast in \(\operatorname {vl}(ab)\) geeft \(AB\parallel DC\). Dus \(ABCD\) is een parallellogram.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./gevolg_e9.html" style="display:block; width:54vw; height:32vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 14 ......
+-->
+<h5 id="autosec-93">Oefening 14</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-93"></a>
+
+
+<p>
+Zijn de volgende uitspraken waar of onwaar? Verbeter de onware uitspraken of geef een tegenvoorbeeld in de kubus \(ABCD.EFGH\).
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Is een rechte evenwijdig met twee snijdende vlakken, dan is ze evenwijdig met hun snijlijn. <div class="oplossing"> Waar. Dat is stelling E5. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Liggen in een vlak \(\alpha \) twee rechten die evenwijdig zijn met een vlak \(\beta \), dan is \(\alpha \parallel \beta \). <div class="oplossing"> Onwaar: de twee rechten moeten
+elkaar snijden (E7). Tegenvoorbeeld: neem \(\alpha =ABCD\) en \(\beta =ABFE\), en in \(\alpha \) de rechte \(DC\) samen met de rechte \(m\) door de middens van \([AD]\) en \([BC]\). Beide zijn evenwijdig met \(AB\subset
+\beta \) en dus met \(\beta \) (E2), maar \(\alpha \) en \(\beta \) snijden elkaar volgens \(AB\). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Door een punt \(P\) gaat precies één vlak dat evenwijdig is met een gegeven vlak \(\alpha \). <div class="oplossing"> Waar. Dat is stelling E8. Ligt \(P\) in \(\alpha \), dan is dat
+vlak \(\alpha \) zelf. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Snijdt een vlak \(\gamma \) twee vlakken \(\alpha \) en \(\beta \) volgens evenwijdige rechten, dan is \(\alpha \parallel \beta \). <div class="oplossing"> Onwaar; dit is de
+omgekeerde uitspraak van E9 en die geldt niet. Tegenvoorbeeld: neem \(\alpha =ABCD\), \(\beta =ABFE\) en \(\gamma =\operatorname {vl}(DCFE)\). Dan is \(\gamma \cap \alpha =DC\) en \(\gamma \cap \beta =EF\),
+met \(DC\parallel EF\), terwijl \(\alpha \) en \(\beta \) elkaar snijden volgens \(AB\). </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Oefening 15 ......
+-->
+<h5 id="autosec-94">Oefening 15</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-94"></a>
+
+
+<p>
+Toon aan of beantwoord. Vermeld telkens de gebruikte stellingen en gevolgen.
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Toon in de kubus \(ABCD.EFGH\) aan dat de snijlijn van \(\operatorname {vl}(EFC)\) met het grondvlak \(ABCD\) de rechte \(CD\) is. <div class="oplossing"> Er geldt \(EF\parallel
+AB\) en \(AB\subset ABCD\), dus \(EF\parallel ABCD\) (E2). De rechte \(EF\) ligt in \(\operatorname {vl}(EFC)\) en dat vlak snijdt \(ABCD\), want \(C\) is gemeenschappelijk. Volgens E6 is de snijlijn evenwijdig met \(EF\),
+en ze gaat door \(C\). Door \(C\) gaat precies één rechte evenwijdig met \(EF\) (S4); in \(ABCD\) is dat \(CD\). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Gegeven zijn \(\alpha \parallel \beta \) met \(\alpha \neq \beta \), en een vlak \(\gamma \) dat \(\alpha \) snijdt volgens \(s\). Toon aan dat \(\gamma \) ook \(\beta \)
+snijdt en dat beide snijlijnen evenwijdig zijn. <div class="oplossing"> Volgens het eerste gevolg van E8 snijdt \(\gamma \) ook \(\beta \), zeg volgens \(t\). De evenwijdige vlakken \(\alpha \) en \(\beta \) worden dus door
+\(\gamma \) gesneden, en E9 geeft \(s\parallel t\). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Hoeveel vlakken evenwijdig met \(\alpha \) gaan er door een rechte \(r\parallel \alpha \)? <div class="oplossing"> Precies één. Kies \(P\in r\); door \(P\) gaat volgens E8 precies
+één vlak \(\beta \parallel \alpha \), en \(r\) ligt volledig in \(\beta \). Elk vlak door \(r\) evenwijdig met \(\alpha \) bevat \(P\) en valt dus samen met \(\beta \). Dit is het derde gevolg van E8. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Twee evenwijdige rechten \(a\) en \(b\) snijden twee evenwijdige, niet-samenvallende vlakken \(\alpha \) en \(\beta \) in \(A,D\) respectievelijk \(B,C\). Wat besluit je over de lengtes
+van \([AB]\) en \([DC]\)? <div class="oplossing"> Volgens het gevolg van E9 is \(ABCD\) een parallellogram, dus \(|AB|=|DC|\). Twee evenwijdige vlakken snijden evenwijdige rechten dus in even lange stukken af. </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Stelling E10 ......
+-->
+<h5 id="autosec-95"><span class="sectionnumber">10&#x2003;</span>Stelling E10</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-95"></a>
+
+
+<p>
+<i>Evenwijdigheid in \(\mathcal V\) is een equivalentierelatie.</i> <div class="oplossing"> <b>Gegeven</b>&#x2003;\(\alpha ,\beta ,\gamma \in \mathcal V\).
+</p>
+
+<p>
+<b>Te bewijzen</b>&#x2003;Evenwijdigheid in \(\mathcal V\) is reflexief, symmetrisch en transitief:
+</p>
+
+<p>
+\[\alpha \parallel \alpha ,\quad \alpha \parallel \beta \Rightarrow \beta \parallel \alpha ,\quad (\alpha \parallel \beta \land \beta \parallel \gamma ) \Rightarrow \alpha \parallel \gamma .\]
+</p>
+
+<p>
+<b>Bewijs</b>&#x2003;De eerste twee volgen uit de definitie; transitiviteit volgt uit de uniciteit van het parallelle vlak door een punt (E8). <iframe src="./stelling_e10.html" style="display:block; width:54vw; height:32vh;
+max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe> </div>
+</p>
+<!--
+...... subsection Rechtenrichting en vlakkenrichting ......
+-->
+<h5 id="autosec-96"><span class="sectionnumber">11&#x2003;</span>Rechtenrichting en vlakkenrichting</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-96"></a>
+<!--
+......   paragraph Definitie rechtenrichting ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-97">Definitie rechtenrichting</span>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-97"></a>
+
+</p>
+
+<p>
+\[\operatorname {Rich}(a)=\opl {\{b\in \mathcal R\mid b\parallel a\}}.\]
+</p>
+
+<p>
+Dit is de equivalentieklasse van \(a\); elke twee rechten erin zijn evenwijdig.
+</p>
+<!--
+......   paragraph Definitie vlakkenrichting ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-98">Definitie vlakkenrichting</span>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-98"></a>
+
+</p>
+
+<p>
+\[\operatorname {Rich}(\alpha )=\opl {\{\beta \in \mathcal V\mid \beta \parallel \alpha \}}.\]
+</p>
+
+<p>
+Elke twee vlakken uit dezelfde vlakkenrichting zijn evenwijdig. <div class="oplossing">
+</p>
+<div class="center">
+<div class="minipage" style="vertical-align:bottom ; justify-content:flex-start ; width:238pt ; ">
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-100"></a>
+
+<p>
+<iframe src="./rechtenrichting.html" style="display:block; width:46vw; height:30vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+
+<p>
+\(\operatorname {Rich}(a)\)
+</p>
+
+
+</div>
+
+&#x2003;
+
+&#x2003;
+<div class="minipage" style="vertical-align:bottom ; justify-content:flex-start ; width:238pt ; ">
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-101"></a>
+
+<p>
+<iframe src="./vlakkenrichting.html" style="display:block; width:46vw; height:30vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+
+<p>
+\(\operatorname {Rich}(\alpha )\)
+</p>
+
+
+</div>
+
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Evenwijdige projectie op een vlak volgens een rechtenrichting ......
+-->
+<h5 id="autosec-102"><span class="sectionnumber">12&#x2003;</span>Evenwijdige projectie op een vlak volgens een rechtenrichting</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-102"></a>
+
+
+<p>
+Neem \(\alpha \) en een richting \(a\) met \(a\not \parallel \alpha \). Voor ieder punt \(X\) is \(p_\alpha ^a(X)\) het snijpunt met \(\alpha \) van de unieke rechte door \(X\) die evenwijdig is met \(a\):
+</p>
+
+<p>
+\[p_\alpha ^a:\Sigma \to \alpha :X\mapsto X&apos;,\qquad X&apos;=\alpha \cap x,\quad X\in x\parallel a.\]
+</p>
+<!--
+......   paragraph Constructie ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-103">Constructie</span>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-103"></a>
+<div class="oplossing"> Trek door \(X\) de unieke rechte \(x\parallel a\). Ze snijdt \(\alpha \) in precies één punt \(X&apos;=p_\alpha ^a(X)\). Voor \(X\in \alpha \) geldt \(X&apos;=X\).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./projectie_op_vlak.html" style="display:block; width:62vw; height:45vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling E11 ......
+-->
+<h5 id="autosec-105"><span class="sectionnumber">13&#x2003;</span>Stelling E11</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-105"></a>
+
+
+<p>
+<i>De projectie van een rechte is een rechte of één punt.</i> <div class="oplossing">
+</p>
+
+<p>
+\[p_\alpha ^a(r)=\begin {cases}\{R\},&amp;r\parallel a,\\r&apos;,&amp;r\not \parallel a.                   \end {cases}\]
+</p>
+
+<p>
+Het vlak door \(r\) met richting \(a\) snijdt \(\alpha \) in de projectierechte \(r&apos;\). Als \(r\) de projectierichting heeft, vallen alle projecterende rechten samen.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e11.html" style="display:block; width:54vw; height:32vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Stelling E12 ......
+-->
+<h5 id="autosec-107"><span class="sectionnumber">14&#x2003;</span>Stelling E12</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-107"></a>
+
+
+<p>
+<i>De projecties van twee evenwijdige rechten zijn twee evenwijdige rechten, één samenvallende rechte, of twee punten.</i> <div class="oplossing">
+</p>
+
+<p>
+\[r\parallel s\quad \Longrightarrow \quad \bigl (p_\alpha ^a(r),p_\alpha ^a(s)\text { zijn punten}\bigr ) \ \lor \ p_\alpha ^a(r)\parallel p_\alpha ^a(s).\]
+</p>
+
+<p>
+Als beide beelden rechten zijn, zijn de projecterende vlakken evenwijdig of samenvallend; E9 geeft evenwijdige of samenvallende snijlijnen met \(\alpha \). Als beide rechten de projectierichting hebben, zijn beide beelden punten.
+</p>
+<div class="center">
+
+<p>
+<iframe src="./stelling_e12.html" style="display:block; width:54vw; height:32vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Evenwijdige projectie op een rechte volgens een vlakkenrichting ......
+-->
+<h5 id="autosec-109"><span class="sectionnumber">15&#x2003;</span>Evenwijdige projectie op een rechte volgens een vlakkenrichting</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-109"></a>
+
+
+<p>
+Neem \(r\) en een vlakkenrichting \(\alpha \) met \(r\not \parallel \alpha \). Voor ieder punt \(X\) is \(p_r^\alpha (X)\) het snijpunt met \(r\) van het unieke vlak door \(X\) evenwijdig met \(\alpha \):
+</p>
+
+<p>
+\[p_r^\alpha :\Sigma \to r:X\mapsto X&apos;,\qquad X&apos;=r\cap \beta _X,\quad X\in \beta _X\parallel \alpha .\]
+</p>
+<!--
+......   paragraph Constructie ......
+-->
+
+
+<p>
+<span class="paragraph" id="autosec-110">Constructie</span>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-110"></a>
+<div class="oplossing"> Construeer volgens E8 het unieke vlak \(\beta _X\parallel \alpha \) door \(X\). Dit snijdt \(r\) in precies één punt \(X&apos;=p_r^\alpha (X)\). Voor \(X\in r\) geldt \(X&apos;=X\).
+</p>
+<div class="center">
+
+<p>
+<iframe src="./projectie_op_rechte.html" style="display:block; width:62vw; height:45vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 16 ......
+-->
+<h5 id="autosec-112">Oefening 16</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-112"></a>
+
+
+<p>
+Beschouw de evenwijdige projectie \(p_\alpha ^a\) op een vlak \(\alpha \) volgens een rechtenrichting \(a\) met \(a\not \parallel \alpha \).
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Wat is het beeld van een punt \(X\in \alpha \), en wat is het beeld van een rechte \(r\subset \alpha \)? <div class="oplossing"> Voor \(X\in \alpha \) is \(X&apos;=X\): de rechte
+door \(X\) evenwijdig met \(a\) snijdt \(\alpha \) in \(X\) zelf. Bijgevolg is \(p_\alpha ^a(r)=r\) voor elke rechte \(r\subset \alpha \). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Wanneer is het beeld van een rechte \(r\) één punt? <div class="oplossing"> Precies wanneer \(r\parallel a\). Dan vallen alle projecterende rechten samen met \(r\) zelf, en is het
+beeld het snijpunt van \(r\) met \(\alpha \) (E11). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Kunnen twee kruisende rechten \(r\) en \(s\) hetzelfde beeld hebben? <div class="oplossing"> Nee. Zijn beide beelden dezelfde rechte \(t\), dan liggen \(r\) en \(s\) in het
+projecterende vlak van \(t\), namelijk het vlak door \(t\) met richting \(a\). Ze zijn dan coplanair en dus niet kruisend. Hun beelden mogen elkaar wel snijden. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Waarom eist men bij \(p_r^\alpha \) dat \(r\not \parallel \alpha \)? <div class="oplossing"> Anders is het beeld niet gedefinieerd: het vlak door \(X\) evenwijdig met \(\alpha \)
+is dan evenwijdig met \(r\) en snijdt \(r\) niet in precies één punt. Het heeft geen punt met \(r\) gemeen, of het bevat \(r\) volledig. </div>
+</p>
+</li>
+</ul>
+<!--
+...... subsection Oefening 17 ......
+-->
+<h5 id="autosec-113">Oefening 17</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-113"></a>
+
+
+<p>
+In de kubus \(ABCD.EFGH\) beschouwen we de evenwijdige projectie \(p\) op het grondvlak \(ABCD\) volgens de rechtenrichting \(\operatorname {Rich}(AE)\).
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Bepaal de beelden van \(E\), \(F\), \(G\) en \(H\). <div class="oplossing"> \(p(E)=A\), \(p(F)=B\), \(p(G)=C\) en \(p(H)=D\), want \(EA\), \(FB\), \(GC\) en \(HD\) zijn evenwijdig met
+\(AE\) en snijden \(ABCD\) in \(A\), \(B\), \(C\) en \(D\). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Bepaal het beeld van de rechte \(EG\) en van de lichaamsdiagonaal \(AG\). <div class="oplossing"> Beide beelden zijn de rechte \(AC\). Voor \(EG\) volgt dat uit \(p(E)=A\) en
+\(p(G)=C\), voor \(AG\) uit \(p(A)=A\) en \(p(G)=C\). Volgens E11 is het beeld van een rechte die niet de projectierichting heeft opnieuw een rechte, en die ligt vast door de beelden van twee van haar punten. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Bepaal het beeld van de ribbe \(BF\). <div class="oplossing"> Het beeld is het punt \(B\): de rechte \(BF\) is evenwijdig met \(AE\) en heeft dus de projectierichting (E11). </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(d)</span> Geef twee kruisende ribben met snijdende beelden. <div class="oplossing"> Bijvoorbeeld \(EF\) en \(BC\). Ze zijn kruisend, en \(p(EF)=AB\) en \(p(BC)=BC\) snijden elkaar in \(B\). Uit
+snijdende beelden volgt dus niet dat de rechten zelf snijden: een projectie bewaart de onderlinge ligging niet. </div>
+</p>
+</li>
+</ul>
+<!--
+...... section Doorsnede van een vlak en een veelvlak construeren ......
+-->
+<h4 id="autosec-114"><span class="sectionnumber">VI&#x2003;</span>Doorsnede van een vlak en een veelvlak construeren</h4>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-114"></a>
+
+
+<p>
+Zoek per zijvlak twee punten die zowel tot het snijvlak als tot dat zijvlak behoren. Verbind ze binnen één zijvlak en ga via gemeenschappelijke ribben verder.
+</p>
+<!--
+...... subsection Voorbeeld: kubus en vlak ......
+-->
+<h5 id="autosec-115"><span class="sectionnumber">1&#x2003;</span>Voorbeeld: kubus en vlak \(PQR\)</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-115"></a>
+
+
+<p>
+In kubus \(ABCD.EFGH\) liggen \(P\in AE\), \(Q\in BF\) en \(R\in CG\). Construeer de doorsnede met \(\pi =\operatorname {vl}(PQR)\). We veronderstellen daarbij dat de rechte door \(R\) evenwijdig met \(PQ\) de ribbe
+\([DH]\) snijdt; bij andere posities van \(P\), \(Q\) en \(R\) ontstaat een andere doorsnede. <div class="oplossing"> In voorvlak \(ABFE\) liggen \(P\) en \(Q\), dus is \(PQ\) een zijde van de doorsnede; in rechterzijvlak \(BCGF\)
+liggen \(Q\) en \(R\), dus is \(QR\) een zijde.
+</p>
+
+<p>
+De overstaande vlakken \(ABFE\) en \(DCGH\) zijn evenwijdig, dus is de snijlijn van \(\pi \) met \(DCGH\) evenwijdig met \(PQ\) (E9). Ze gaat door \(R\), want \(R\in CG\subset DCGH\). Noem \(S\) haar snijpunt met \([DH]\).
+Dan is \(RS\) de derde zijde, en in \(ADHE\) verbindt \(SP\) de doorsnede weer met \(P\).
+</p>
+
+<p>
+De doorsnede is de vierhoek \(PQRS\). Omdat ook \(BCGF\parallel ADHE\), geeft E9 bovendien \(QR\parallel PS\), zodat \(PQRS\) een parallellogram is.
+</p>
+
+<p>
+De zijden \(PQ\) en \(QR\) liggen in de zichtbare zijvlakken en tekenen we vol; \(RS\) en \(SP\) liggen in de achterste zijvlakken \(DCGH\) en \(ADHE\) en tekenen we gestreept.
+</p>
+<div class="center">
+
+<p>
+<iframe data-vast src="./doorsnede_kubus_pqr.html" style="display:block; width:68vw; height:52vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+
+<p>
+</div>
+</p>
+<!--
+...... subsection Oefening 18 ......
+-->
+<h5 id="autosec-117">Oefening 18</h5>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-117"></a>
+
+
+<p>
+In de kubus \(ABCD.EFGH\) is \(M\) het midden van de ribbe \([EH]\). Construeer de doorsnede van de kubus met het vlak \(\mu =\operatorname {vl}(DFM)\).
+</p>
+<ul class="enumerate" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">(a)</span> Welke twee zijden van de doorsnede kun je onmiddellijk tekenen? <div class="oplossing"> De punten \(D\) en \(M\) liggen allebei in het zijvlak \(ADHE\), dus is \(DM\) de snijlijn van
+\(\mu \) met \(ADHE\) (A1 en A4) en bijgevolg een zijde. De punten \(M\) en \(F\) liggen allebei in het bovenvlak \(EFGH\), dus is \(MF\) op dezelfde manier een zijde. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(b)</span> Construeer het vierde hoekpunt en verantwoord elke stap. <div class="oplossing"> Het grondvlak \(ABCD\) is evenwijdig met het bovenvlak \(EFGH\), dus is de snijlijn van \(\mu \) met
+\(ABCD\) evenwijdig met \(MF\) (E9). Ze gaat door \(D\), want \(D\in ABCD\). De rechte door \(D\) evenwijdig met \(MF\) snijdt in het vierkant \(ABCD\) de ribbe \([BC]\); noem dat snijpunt \(N\). In het zijvlak \(BCGF\) is
+\(NF\) dan de laatste zijde. </div>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">(c)</span> Welke bijzondere vierhoek is de doorsnede? Verantwoord. <div class="oplossing"> Uit de constructie volgt \(DN\parallel MF\). Bovendien is \(ADHE\parallel BCGF\), zodat E9 ook
+\(DM\parallel NF\) geeft. De vierhoek \(DNFM\) heeft dus twee paar evenwijdige overstaande zijden en is een parallellogram. Daaruit volgt \(|DN|=|MF|\), en in het vierkant \(ABCD\) betekent dit dat \(N\) het midden van
+\([BC]\) is.
+</p>
+<p>
+De zijden \(NF\) en \(FM\) liggen in de zichtbare zijvlakken \(BCGF\) en \(EFGH\) en tekenen we vol; \(MD\) en \(DN\) liggen in de achterste zijvlakken \(ADHE\) en \(ABCD\) en tekenen we gestreept.
+</p>
+<div class="center">
+<p>
+<iframe data-vast src="./oefening_doorsnede_dfm.html" style="display:block; width:60vw; height:46vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
+</p>
+</div>
+<p>
+</div>
+</p>
+</li>
+</ul>
+<!--
+...... section Oefeningen ......
+-->
+<h4 id="autosec-119"><span class="sectionnumber">VII&#x2003;</span>Oefeningen</h4>
+<a id="01_SynthetischeRuimtemeetkunde_web-autopage-119"></a>
+
+
+<p>
+Maak de oefeningen interactief zelf in GeoGebra en doorloop daarbij minstens de vier technieken: <a href="https://www.geogebra.org/m/z5Yyr8hh" target="_blank" >https://www.geogebra.org/m/z5Yyr8hh</a>
+</p>
+
+<p>
+Zie ook voor extra oefeningen het handboek <i>Van Basis tot Limiet, Ruimtemeetkunde</i>, p.&nbsp;27 en volgende.
+</p>
+
+<a id="01_SynthetischeRuimtemeetkunde_web-autofile-last"></a>
+</section>
+
+</main>
+
+</div><!-- grid -->
+<script src="presentatie.js?v=1788498321"></script>
+</body>
+</html>
