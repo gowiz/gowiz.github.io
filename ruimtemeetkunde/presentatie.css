@@ -1,4 +1,4 @@
-@import url("lwarp.css?v=1788498321");
+@import url("lwarp.css");
 
 /* Presentatielaag bovenop de lwarp-uitvoer van cursus.cls.
  *
@@ -172,9 +172,15 @@ body:not(.pres-klaar) .homepagegrid {
   visibility: hidden;
 }
 
+/* De kolom met het podium krijgt minmax(0, 1fr) en niet 1fr: een rastercel is
+ * standaard nooit smaller dan haar min-content, en de kopbalk met haar
+ * knoppen en de titel op één regel zet die ondergrens ver boven de breedte van
+ * een telefoonscherm. Het hele raster werd daardoor breder dan het venster en
+ * de pagina schoof zijdelings weg. De nul laat de kolom wel krimpen; wat er
+ * dan nog te breed is, valt binnen zijn eigen kader op. */
 body.pres-klaar {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   grid-template-rows: var(--balk) 1fr auto;
   grid-template-areas:
     "kop      kop"
@@ -271,6 +277,16 @@ body.pres-klaar {
 }
 
 body.pres-zijbalk-dicht .pres-zijbalk {
+  display: none;
+}
+
+/* De sluier hoort alleen bij de zwevende inhoudstafel van een smal scherm;
+ * breed staat die naast het podium en valt er niets te verduisteren. */
+.pres-sluier {
+  display: none;
+}
+
+body.pres-zijbalk-dicht .pres-sluier {
   display: none;
 }
 
@@ -372,6 +388,7 @@ body.pres-zijbalk-dicht .pres-zijbalk {
   overscroll-behavior: contain;
   scroll-behavior: smooth;
   padding: 1.5rem 1.25rem 3rem;
+  min-width: 0;
 }
 
 .slide {
@@ -433,10 +450,16 @@ body.pres-zijbalk-dicht .pres-zijbalk {
   margin: 0 0 .6rem;
 }
 
+/* "Ruimtemeetkunde" is één woord van vijftien letters: op een telefoon past
+ * dat niet naast de rand. De titel krimpt daarom mee met het scherm en mag
+ * desnoods afbreken; het document draagt lang="nl-BE", dus zet de browser het
+ * koppelteken op een verantwoorde plaats. */
 .cursustitel h1 {
-  font-size: 2.4rem;
+  font-size: clamp(1.7rem, 7.5vw, 2.4rem);
   margin: 0;
   color: var(--kleur-accent);
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 .cursustitel .cursusondertitel {
@@ -512,6 +535,8 @@ body.pres-zijbalk-dicht .pres-zijbalk {
 
 .opl {
   display: inline-block;
+  /* Een inline blok wordt anders even breed als de formule die erin staat. */
+  max-width: 100%;
   background: var(--kleur-oplossing);
   border: 1px solid var(--kleur-oplossing-rand);
   border-radius: 6px;
@@ -819,11 +844,38 @@ kbd {
  * namen hierboven. */
 .slide a {
   color: var(--kleur-accent);
+  /* Een webadres is één woord van tachtig tekens; op een telefoon steekt dat
+   * anders dwars door het kader heen. */
+  overflow-wrap: anywhere;
 }
 
 .slide a:hover {
   color: var(--kleur-accent);
   text-decoration: underline;
+}
+
+/* Een formule op een eigen regel valt niet af te breken. Past ze niet, dan
+ * schuift ze binnen haar eigen strook opzij in plaats van de hele slide breder
+ * te maken; op een telefoon gebeurt dat bij de langere uitspraken. */
+.slide mjx-container[display="true"] {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: .25rem;
+}
+
+/* Wiskunde in de lopende tekst kan niet schuiven zonder de regel eromheen mee
+ * te nemen, en ze breekt niet af. Ze krimpt daarom mee: MathJax levert een
+ * SVG met een viewBox, dus schaalt de formule evenredig zodra ze breder is
+ * dan wat er staat. Enkel dan, want max-width knijpt niets wat al past. Op een
+ * kleine telefoon scheelt dat bij de langere verzamelingsnotaties. */
+.slide mjx-container:not([display="true"]) {
+  max-width: 100%;
+}
+
+.slide mjx-container:not([display="true"]) svg {
+  max-width: 100%;
+  height: auto;
 }
 
 /* Het kader dat MathJax rond \opl tekent, komt uit \bbox in cursus.cls en
@@ -871,7 +923,7 @@ kbd {
   }
 
   body.pres-klaar {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "kop"
       "podium"
@@ -900,12 +952,59 @@ kbd {
     top: 0;
   }
 
+  /* De inhoudstafel ligt hier over het podium in plaats van ernaast, dus
+   * hoort er een sluier onder: die maakt zichtbaar dat de cursus erachter
+   * blijft staan, en een tik erop legt de lijst weer weg. */
+  .pres-sluier {
+    display: block;
+    position: fixed;
+    inset: var(--balk) 0 0 0;
+    z-index: 4;
+    background: var(--kleur-sluier);
+  }
+
+  html.pres-groot .pres-sluier {
+    top: 0;
+  }
+
   .slide {
     padding: 1.2rem 1rem 1.5rem;
   }
 
+  /* Twee kolommen zijn op deze breedte een handvol woorden per regel. */
+  .pres-korteinhoud:has(li:nth-child(9)) {
+    columns: 1;
+  }
+
+  .slide .multicols {
+    column-count: 1;
+  }
+
+  /* De figuren komen uit de PDF en dragen daar een breedte in vw als
+   * inline stijl; op een telefoon blijft daar een postzegel van over. Ze
+   * mogen hier de volle breedte van de slide nemen. */
+  .pres-figuur iframe {
+    width: 100% !important;
+  }
+
+}
+
+/* De opschriften bij de knoppen vallen pas veel later weg dan de zijbalk gaat
+ * zweven: een tablet en een telefoon in liggende stand hebben ruimte zat voor
+ * "Oplossingen" en "Volgende". Enkel op een telefoon in staande stand blijft
+ * er van de kopbalk anders niets over. */
+@media (max-width: 34rem) {
   .pres-verberg-smal {
     display: none;
+  }
+}
+
+/* Zonder muis valt er niets aan te wijzen: op een aanraakscherm staan de
+ * knoppen bij een figuur meteen in beeld, anders raakt de lezer nooit aan
+ * Groot of Reset. */
+@media (hover: none) {
+  .pres-figuur .pres-figuurbalk {
+    opacity: 1;
   }
 }
 

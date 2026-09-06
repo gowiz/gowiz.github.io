@@ -16,7 +16,7 @@
   var KOPPEN = "h1, h2, h3, h4, h5, h6";
   var NIVEAU = { H1: 1, H2: 1, H3: 1, H4: 1, H5: 2, H6: 3 };
 
-  var podium, zijbalk, teller, voortgang, voortgangbalk, hulpvenster, zoekveld, melding;
+  var podium, zijbalk, sluier, teller, voortgang, voortgangbalk, hulpvenster, zoekveld, melding;
   var kopbalk, knopVorige, knopVolgende, knopOplossingen, knopZijbalk, knopPresentatie;
   var slides = [];
   var index = 0;
@@ -593,6 +593,12 @@
 
   /* --- Zijbalk, zoeken en presentatiestand ------------------------------ */
 
+  // Dezelfde grens als het smalle-schermenblok in presentatie.css: daar
+  // zweeft de inhoudstafel over het podium in plaats van ernaast te staan.
+  function smalScherm() {
+    return window.matchMedia("(max-width: 55rem)").matches;
+  }
+
   function wisselZijbalk(open) {
     var dicht = open === undefined
       ? !document.body.classList.contains("pres-zijbalk-dicht")
@@ -697,12 +703,12 @@
 
     kop.appendChild(el("div", "pres-rek"));
 
-    knopOplossingen = el("button", "pres-knop pres-verberg-smal");
+    knopOplossingen = el("button", "pres-knop");
     knopOplossingen.type = "button";
     knopOplossingen.setAttribute("aria-pressed", "false");
     knopOplossingen.title = "Alle oplossingen tonen of verbergen (o)";
     knopOplossingen.appendChild(icoon(ICOON.oog));
-    knopOplossingen.appendChild(el("span", null, "Oplossingen"));
+    knopOplossingen.appendChild(el("span", "pres-verberg-smal", "Oplossingen"));
     knopOplossingen.addEventListener("click", function () {
       wisselAlleOplossingen(!oplossingenZichtbaar);
     });
@@ -734,6 +740,9 @@
     knopHulp.appendChild(icoon(ICOON.vraag));
     knopHulp.addEventListener("click", function () { hulpvenster.toggleAttribute("open"); });
     kop.appendChild(knopHulp);
+
+    sluier = el("div", "pres-sluier");
+    sluier.addEventListener("click", function () { wisselZijbalk(false); });
 
     zijbalk = el("nav", "pres-zijbalk");
     zijbalk.id = "pres-zijbalk";
@@ -787,7 +796,13 @@
       a.appendChild(tekst);
       a.href = "#" + s.id;
       a.dataset.index = String(i);
-      a.addEventListener("click", function (e) { e.preventDefault(); toon(i); });
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        toon(i);
+        // Op een telefoon ligt de lijst over de cursus; wie gekozen heeft,
+        // wil die slide zien en niet de lijst.
+        if (smalScherm()) wisselZijbalk(false);
+      });
       li.appendChild(a);
       lijst.appendChild(li);
     });
@@ -899,6 +914,7 @@
 
     document.body.appendChild(melding);
     document.body.appendChild(kop);
+    document.body.appendChild(sluier);
     document.body.appendChild(zijbalk);
     document.body.appendChild(podium);
     document.body.appendChild(voet);
@@ -1002,6 +1018,9 @@
 
     document.body.classList.add("pres-klaar");
     zetPresentatiestand(false);
+    // Breed staat de inhoudstafel naast het podium en hoort ze open; smal
+    // ligt ze eroverheen, en dan is de cursus zelf het eerste wat je wil zien.
+    wisselZijbalk(!smalScherm());
     wisselAlleOplossingen(opgehaald("oplossingen") === "1");
 
     // Een anker in de adresbalk wint altijd: dat is een link naar een

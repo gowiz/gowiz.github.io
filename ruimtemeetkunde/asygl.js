@@ -1,10 +1,6 @@
-/* Aangepast door mkweb: zie de opmerking bij asygl in bin/mkweb. */
-var __asyTop = (function () {
-     try { window.top.document; return window.top; } catch (e) { return window; }
-})();
-var __asyParent = (function () {
-     try { window.parent.document; return window.parent; } catch (e) { return window; }
-})();
+/* Lokale viewer, aangepast door mkpi. */
+var __asyTop=(function(){try{window.top.document;return window.top;}catch(e){return window;}})();
+var __asyParent=(function(){try{window.parent.document;return window.parent;}catch(e){return window;}})();
 /*@license
  AsyGL: Render Bezier patches and triangles via subdivision with WebGL.
   Copyright 2019-26: John C. Bowman and Supakorn "Jamie" Rassameemasmuang
