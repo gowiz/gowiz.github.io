@@ -1,6 +1,7 @@
 body {
     margin: 60px auto;
-    width: 70%;
+    max-width: 60em;
+    width: 90%;
 }
 nav ul, footer ul {
     font-family:'Helvetica', 'Arial', 'Sans-Serif';
@@ -57,7 +58,18 @@ ul.posts li {
     list-style: none;
 }
 table {
-    width: 70%;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+td, th {
+    padding: 4px 8px;
+    text-align: left;
+}
+
+/* Brede tabellen mogen zelf schuiven, de pagina niet. */
+.container {
+    overflow-x: auto;
 }
 
 th {
