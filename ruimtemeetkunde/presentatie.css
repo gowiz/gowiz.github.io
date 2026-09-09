@@ -22,14 +22,16 @@
   --kleur-accent: #1d5fa8;
   --kleur-accent-zacht: #e8f0fa;
   --kleur-op-accent: #ffffff;
-  --kleur-oplossing: #f4f7f4;
-  --kleur-oplossing-rand: #bcd3bc;
-  --kleur-oplossing-streep: #e6ece6;
+  --kleur-oplossing: #fafcfa;
+  --kleur-oplossing-rand: #d6e4d6;
+  --kleur-oplossing-streep: #f7faf7;
   --kleur-oplossing-tekst: #3d6b3d;
-  --kleur-figuur: #ffffff;
+  --kleur-figuur: rgba(255, 255, 255, .4);
+  --kleur-figuur-rand: #e9edf2;
   --kleur-sluier: rgba(20, 28, 38, .45);
   --schaduw: rgba(0, 0, 0, .18);
   --figuur-filter: none;
+  --figuur-mengmodus: multiply;
   --balk: 3.25rem;
   --zijbalk: 20rem;
   --straal: 10px;
@@ -52,14 +54,16 @@
     --kleur-accent: #7ab4f0;
     --kleur-accent-zacht: #1d2c3c;
     --kleur-op-accent: #0e141a;
-    --kleur-oplossing: #17241c;
-    --kleur-oplossing-rand: #3c5c42;
-    --kleur-oplossing-streep: #1f3325;
+    --kleur-oplossing: #1a2822;
+    --kleur-oplossing-rand: #30483a;
+    --kleur-oplossing-streep: #1d2c23;
     --kleur-oplossing-tekst: #9ccba6;
-    --kleur-figuur: #0b1016;
+    --kleur-figuur: rgba(255, 255, 255, .02);
+    --kleur-figuur-rand: #26313d;
     --kleur-sluier: rgba(4, 8, 12, .6);
     --schaduw: rgba(0, 0, 0, .55);
     --figuur-filter: invert(1) hue-rotate(180deg);
+    --figuur-mengmodus: screen;
   }
 }
 
@@ -264,6 +268,24 @@ body.pres-klaar {
   flex: none;
 }
 
+/* Hints blijven standaard verborgen, ook in de korte tijd voor
+ * presentatie.js gestart is. De lezer kan ze voor alle hoofdstukken tegelijk
+ * aanzetten; het script bewaart die keuze. */
+.hint {
+  display: none;
+  color: var(--kleur-zwak);
+}
+
+:root[data-hints="zichtbaar"] .hint {
+  display: inline;
+}
+
+/* Een hint die een heel blok beslaat, geschreven als \begin{hint}...\end{hint},
+ * bevat displaymath, een lijst of een figuur en kan dus niet inline staan. */
+:root[data-hints="zichtbaar"] .hint-blok {
+  display: block;
+}
+
 /* --- Zijbalk met de inhoudstafel --------------------------------------- */
 
 .pres-zijbalk {
@@ -403,12 +425,6 @@ body.pres-zijbalk-dicht .pres-sluier {
 
 .slide.pres-actief {
   display: block;
-  animation: pres-invaren .18s ease-out;
-}
-
-@keyframes pres-invaren {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: none; }
 }
 
 .slide > .pres-kruimel {
@@ -525,23 +541,41 @@ body.pres-zijbalk-dicht .pres-sluier {
 /* --- Oplossingen ------------------------------------------------------- */
 
 .oplossing {
+  position: relative;
   background: var(--kleur-oplossing);
   border: 1px solid var(--kleur-oplossing-rand);
   border-left-width: 4px;
   border-radius: var(--straal);
   padding: .5rem 1rem;
   margin: 1rem 0;
+  cursor: pointer;
 }
 
 .opl {
   display: inline-block;
+  position: relative;
   /* Een inline blok wordt anders even breed als de formule die erin staat. */
   max-width: 100%;
   background: var(--kleur-oplossing);
   border: 1px solid var(--kleur-oplossing-rand);
   border-radius: 6px;
-  padding: .1rem .5rem;
+  padding: .1rem 2rem .1rem .5rem;
   margin: .15rem 0;
+  cursor: pointer;
+}
+
+.opl::after {
+  content: "";
+  display: none;
+  position: absolute;
+  top: 50%;
+  right: .55rem;
+  width: 1rem;
+  height: 1rem;
+  translate: 0 -50%;
+  background: currentColor;
+  opacity: .08;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .opl-fill {
@@ -553,13 +587,17 @@ body.pres-zijbalk-dicht .pres-sluier {
   text-align: center;
 }
 
-/* Dichtgeklapt: de plaats blijft staan, de inhoud niet. */
+/* Dichtgeklapt: de inhoud wordt onzichtbaar, maar behoudt haar plaats. */
 .pres-verborgen > .pres-inhoud {
-  display: none;
+  visibility: hidden;
 }
 
 .oplossing.pres-verborgen {
-  padding: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--kleur-oplossing) 0 6px,
+    var(--kleur-oplossing-streep) 6px 12px
+  );
   border-style: dashed;
 }
 
@@ -571,14 +609,13 @@ body.pres-zijbalk-dicht .pres-sluier {
     var(--kleur-oplossing-streep) 6px 12px
   );
   border-style: dashed;
-  cursor: pointer;
   user-select: none;
 }
 
 .opl.pres-verborgen::after {
-  content: "?";
-  color: var(--kleur-zwak);
-  font-weight: 700;
+  display: block;
+  background: var(--kleur-zwak);
+  opacity: .72;
 }
 
 /* Dezelfde \opl, maar dan door MathJax getekend: het kader komt van \bbox,
@@ -592,27 +629,48 @@ body.pres-zijbalk-dicht .pres-sluier {
 }
 
 .pres-onthul {
-  font: inherit;
-  white-space: nowrap;
-  font-size: .8rem;
-  display: inline-flex;
+  position: absolute;
+  z-index: 1;
+  top: .55rem;
+  right: .55rem;
+  display: flex;
   align-items: center;
-  gap: .35rem;
-  margin: .4rem 0;
-  padding: .3rem .7rem;
-  border: 1px solid var(--kleur-oplossing-rand);
-  border-radius: 999px;
-  background: var(--kleur-vlak);
-  color: var(--kleur-oplossing-tekst);
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: .5rem;
+  border: 0;
+  background: transparent;
+  color: var(--kleur-zwak);
+  opacity: .08;
   cursor: pointer;
 }
 
-.pres-onthul:hover {
-  background: var(--kleur-oplossing);
+.pres-onthul svg {
+  width: 1rem;
+  height: 1rem;
 }
 
-.oplossing:not(.pres-verborgen) > .pres-onthul {
-  color: var(--kleur-zwak);
+.pres-onthul span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.oplossing.pres-verborgen > .pres-onthul {
+  opacity: .72;
+}
+
+.oplossing:not(.pres-verborgen) > .pres-onthul svg {
+  visibility: hidden;
+}
+
+.pres-onthul:hover,
+.pres-onthul:focus-visible {
+  opacity: 1;
 }
 
 /* --- Figuren ----------------------------------------------------------- */
@@ -634,6 +692,44 @@ body.pres-zijbalk-dicht .pres-sluier {
   vertical-align: top !important;
 }
 
+/* Bij de verwante hoeken staan op papier een grafiek en een formulekader in
+ * twee minipages. Gebruik diezelfde links-rechtsindeling op de site, maar laat
+ * haar de volledige slidebreedte innemen; de vaste TeX-breedtes maakten het
+ * grafiekbord te smal en gaven de minipage een horizontale schuifbalk. */
+.slide .center:has(> .minipage .interactieve-grafiek) {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(14rem, 2fr);
+  align-items: start;
+  gap: 1.5rem;
+}
+
+.slide .center:has(> .minipage .interactieve-grafiek) > .minipage {
+  width: auto !important;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+/* Centreer de rechterkolom tegenover alleen het tekenbord. Status, knoppen en
+ * uitleg onder de grafiek horen niet mee te wegen in die uitlijning. De
+ * runtime vult de werkelijk gemeten middenpositie bij iedere herschaling in. */
+.slide .center:has(> .minipage .interactieve-grafiek)
+  > .minipage:not(:has(.interactieve-grafiek)) {
+  position: relative;
+  top: var(--grafiek-bordmidden, 10rem);
+  transform: translateY(-50%);
+  align-items: center;
+}
+
+.slide .center:has(> .minipage .interactieve-grafiek)
+  > .minipage:not(:has(.interactieve-grafiek)) .fbox {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding-left: 3rem !important;
+  padding-right: 3rem !important;
+}
+
 /* Rond ruwe HTML-blokken laat lwarp lege alinea's achter. In een grid zouden
  * die als extra cel meetellen en beide echte kolommen een plaats opschuiven. */
 .oefening-met-figuur > p:empty {
@@ -647,7 +743,7 @@ body.pres-zijbalk-dicht .pres-sluier {
 .pres-figuur {
   position: relative;
   margin: 1rem auto;
-  border: 1px solid var(--kleur-lijn);
+  border: 1px solid var(--kleur-figuur-rand);
   border-radius: var(--straal);
   background: var(--kleur-figuur);
   overflow: hidden;
@@ -665,6 +761,7 @@ body.pres-zijbalk-dicht .pres-sluier {
    * die van niets weet, en een omschakeling laat haar zo in haar stand
    * staan in plaats van ze opnieuw te moeten laden. */
   filter: var(--figuur-filter);
+  mix-blend-mode: var(--figuur-mengmodus);
 }
 
 .pres-figuur .pres-figuurbalk {
@@ -673,24 +770,71 @@ body.pres-zijbalk-dicht .pres-sluier {
   right: .4rem;
   display: flex;
   gap: .3rem;
-  opacity: 0;
-  transition: opacity .15s;
-}
-
-.pres-figuur:hover .pres-figuurbalk {
-  opacity: 1;
-}
-
-/* Zie de kopbalk hierboven: na een muisklik op Groot of Reset zou
- * :focus-within de knoppen laten staan tot je elders klikt. */
-.pres-figuur:has(:focus-visible) .pres-figuurbalk {
-  opacity: 1;
 }
 
 .pres-figuurbalk .pres-knop {
+  gap: 0;
   padding: .35rem .5rem;
   font-size: .78rem;
   background: var(--kleur-vlak-zweef);
+  opacity: .35;
+  transition: opacity .15s, background .12s, border-color .12s, color .12s;
+}
+
+.pres-figuurbalk .pres-knop:hover,
+.pres-figuurbalk .pres-knop:focus-visible {
+  opacity: 1;
+}
+
+.pres-figuurbalk .pres-stapknop {
+  opacity: .65;
+}
+
+.pres-figuurbalk .pres-figuur-grootknop {
+  margin-left: .45rem;
+}
+
+.pres-figuurbalk .pres-speel-attentie {
+  animation: pres-speel-attentie 1.35s ease-in-out;
+}
+
+@keyframes pres-speel-attentie {
+  0%, 100% {
+    background: var(--kleur-vlak-zweef);
+    border-color: var(--kleur-lijn);
+    box-shadow: none;
+    color: var(--kleur-tekst);
+  }
+  18%, 55% {
+    background: var(--kleur-accent);
+    border-color: var(--kleur-accent);
+    box-shadow: 0 0 0 .22rem var(--kleur-accent-zacht);
+    color: var(--kleur-op-accent);
+    opacity: 1;
+  }
+  34%, 72% {
+    background: var(--kleur-vlak-zweef);
+    border-color: var(--kleur-lijn);
+    box-shadow: none;
+    color: var(--kleur-tekst);
+  }
+}
+
+.pres-figuurbalk .pres-knop:disabled {
+  cursor: default;
+  opacity: .16;
+}
+
+.pres-figuurbalk .pres-knop span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* De doorschijnende achtergrond hierboven zou anders de ingedrukte stand
@@ -717,10 +861,22 @@ body.pres-zijbalk-dicht .pres-sluier {
   height: 100% !important;
 }
 
-/* Groot getoond blijft de knoppenbalk staan: dat is de weg terug, naast
- * Escape. */
-.pres-figuur-groot .pres-figuurbalk {
-  opacity: 1;
+/* Zolang een interactieve grafiek niet draait, staat op haar plaats de gewone
+ * statische figuur uit de cursus. Groot en Reset horen daar niet bij: er valt
+ * niets te herstellen, en de andere statische figuren hebben die knoppen ook
+ * niet. */
+.interactieve-grafiek:not(.interactieve-grafiek-actief) .pres-figuurbalk {
+  display: none;
+}
+
+/* Een interactieve grafiek is geen iframe: ze tekent in de pagina zelf en
+ * krijgt haar hoogte in pixels van interactieve-grafieken.js. Hier staat
+ * enkel dat de figuur groot getoond het hele kader vult; de opmaak van de
+ * grafiek zelf blijft in interactieve-grafieken.css. */
+.pres-figuur-groot.interactieve-grafiek {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .pres-figuurhint {
@@ -1008,6 +1164,12 @@ kbd {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .pres-figuurbalk .pres-speel-attentie {
+    animation: none;
+  }
+}
+
 @media print {
   body,
   body.pres-klaar {
@@ -1036,7 +1198,7 @@ kbd {
   }
 
   .pres-verborgen > .pres-inhoud {
-    display: revert;
+    visibility: visible;
   }
 }
 

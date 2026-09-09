@@ -5,7 +5,7 @@
 <meta name="generator" content="LaTeX Lwarp package" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Synthetische ruimtemeetkunde</title>
-<link rel="stylesheet" type="text/css" href="presentatie.css?v=37f38146bd92" />
+<link rel="stylesheet" type="text/css" href="presentatie.css?v=245d1a4cdc29" />
 
 <script>
 // Lwarp MathJax emulation code
@@ -364,6 +364,52 @@ MathJax = {
 \(\require {textcomp}\)
 
 \(\newcommand {\opl }[2][]{\bbox [whitesmoke, 3px, border:                                     1px dashed darkseagreen]{\class {opl-math}{#2}}}\)
+
+\(\newcommand {\hint }[1]{\class {hint}{#1}}\)
+
+\(\newcommand {\N }{\mathbb {N}}\)
+
+\(\newcommand {\Z }{\mathbb {Z}}\)
+
+\(\newcommand {\Q }{\mathbb {Q}}\)
+
+\(\newcommand {\R }{\mathbb {R}}\)
+
+\(\newcommand {\C }{\mathbb {C}}\)
+
+\(\newcommand {\E }{\mathrm {E}}\)
+
+\(\newcommand {\T }{\mathsf {T}}\)
+
+\(\newcommand {\dom }{\mathrm {dom}}\)
+
+\(\newcommand {\ber }{\mathrm {ber}}\)
+
+\(\newcommand {\degree }{^{\circ }}\)
+
+\(\newcommand {\qed }{\hfill \square }\)
+
+\(\newcommand {\markeercellen }[4][.35]{}\)
+
+\(\newcommand {\celpijl }[3]{}\)
+
+\(\newcommand {\weq }{\ifnextchar [{\weqmet }{\weqzonder }}\)
+
+\(\def \weqmet [#1]{\ifnextchar [{\weqtwee {#1}}{\weqeen {#1}}}\)
+
+\(\def \weqtwee #1[#2]#3{\mathrel {\overset {#1}{\underset {#2}{#3}}}}\)
+
+\(\def \weqeen #1#2{\mathrel {\overset {#1}{#2}}}\)
+
+\(\def \weqzonder #1{\mathrel {#1}}\)
+
+\(\newcommand {\shortstack }[2][]{\substack {#2}}\)
+
+\(\newcommand {\scriptsize }{}\)
+
+\(\newcommand {\tiny }{}\)
+
+\(\newcommand {\markeerterm }[2]{#2}\)
 
 \(\newcommand {\intertext }[1]{\text {#1}\notag \\}\)
 
@@ -1568,6 +1614,15 @@ bepalen door A3 precies één vlak. Door A4 bevat dit vlak \(a\) en \(b\). Elk a
 <p>
 </div>
 </p>
+
+
+<div class="hint hint-blok">
+
+<p>
+Het unieke vlak bepaald door \(A\) en \(a\) kunnen we bijvoorbeeld \(\alpha \) noemen. We noteren dan \(\alpha =\operatorname {vl}(Aa)\).
+</p>
+
+</div>
 <!--
 ...... subsection Stelling S3 ......
 -->
@@ -1937,7 +1992,7 @@ verschillende rechten \(EV\) en \(FU\) niet evenwijdig zijn.
 </ul>
 
 <p>
-<div class="oplossing">
+<div class="oplossing"> <b>Vlakke voorstelling:</b>
 </p>
 <div class="center">
 
@@ -1945,6 +2000,14 @@ verschillende rechten \(EV\) en \(FU\) niet evenwijdig zijn.
 <iframe src="./snijlijn_qw.html" style="display:block; width:62vw; height:36vh; max-width:100&percnt;; border:0; margin:0 auto;" allowfullscreen loading="lazy"></iframe>
 </p>
 </div>
+
+<p>
+</div>
+</p>
+
+<p>
+<div class="oplossing"> <b>Bewijs:</b>
+</p>
 
 <p>
 We zoeken \(s=\operatorname {vl}(Ev)\cap \operatorname {vl}(Fu)\).
@@ -2836,7 +2899,7 @@ snijdende beelden volgt dus niet dat de rechten zelf snijden: een projectie bewa
 Zoek per zijvlak twee punten die zowel tot het snijvlak als tot dat zijvlak behoren. Verbind ze binnen één zijvlak en ga via gemeenschappelijke ribben verder.
 </p>
 <!--
-...... subsection Voorbeeld: kubus en vlak ......
+...... subsection Voorbeeld: kubus en vlak PQR ......
 -->
 <h5 id="autosec-115"><span class="sectionnumber">1&#x2003;</span>Voorbeeld: kubus en vlak \(PQR\)</h5>
 <a id="mkpiweb-autopage-115"></a>
@@ -2939,6 +3002,6 @@ Zie ook voor extra oefeningen het handboek <i>Van Basis tot Limiet, Ruimtemeetku
 </main>
 
 </div><!-- grid -->
-<script src="presentatie.js?v=37f38146bd92"></script>
+<script src="presentatie.js?v=245d1a4cdc29"></script>
 </body>
 </html>

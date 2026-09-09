@@ -17,10 +17,13 @@
   var NIVEAU = { H1: 1, H2: 1, H3: 1, H4: 1, H5: 2, H6: 3 };
 
   var podium, zijbalk, sluier, teller, voortgang, voortgangbalk, hulpvenster, zoekveld, melding;
-  var kopbalk, knopVorige, knopVolgende, knopOplossingen, knopZijbalk, knopPresentatie;
+  var kopbalk, knopVorige, knopVolgende, knopOplossingen, knopHints,
+      knopZijbalk, knopPresentatie;
   var slides = [];
+  var navigatie = [];
   var index = 0;
   var oplossingenZichtbaar = false;
+  var hintsZichtbaar = false;
   var groteFiguur = null;
   var zijbalkVoorPresentatie = false;
   var knopThema, systeemDonker;
@@ -59,7 +62,12 @@
     lijst: "M4 6h16M4 12h16M4 18h16",
     oog: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7zM12 9a3 3 0 100 6 3 3 0 000-6z",
     herstel: "M3 12a9 9 0 109-9 9 9 0 00-6.36 2.64L3 8M3 3v5h5",
+    begin: "M5 5v14M19 6l-9 6 9 6z",
+    einde: "M19 5v14M5 6l9 6-9 6z",
+    speel: "M8 5l11 7-11 7z",
+    pauze: "M8 5v14M16 5v14",
     vraag: "M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3M12 17h.01",
+    lamp: "M9 18h6M10 22h4M8.5 14.5a6 6 0 117 0c-1 1-1.5 2-1.5 3.5h-4c0-1.5-.5-2.5-1.5-3.5z",
     vergroot: "M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3",
     zoek: "M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-4.1-4.1",
     scherm: "M3 5h18v11H3zM9 20h6M12 16v4",
@@ -78,6 +86,55 @@
   function opgehaald(sleutel) {
     try { return localStorage.getItem(BEWAAR + ":" + sleutel); } catch (e) { return null; }
   }
+
+  /* --- Hints ---------------------------------------------------------- */
+
+  // Hints zijn een voorkeur van de lezer en gelden daarom voor alle
+  // hoofdstukken, net als het thema. Zonder opgeslagen keuze blijven ze
+  // verborgen; presentatie.css zorgt dat ze ook voor het starten niet even
+  // zichtbaar opflitsen.
+  var HINTS = "pres:hints";
+
+  function bewaardeHints() {
+    try { return localStorage.getItem(HINTS) === "1"; } catch (e) { return false; }
+  }
+
+  function huidigeSlideHeeftHints() {
+    var slide = slides[index];
+    return Boolean(slide &&
+      (slide.querySelector(".hint") || /\\hint\s*\{/.test(slide.textContent)));
+  }
+
+  function toonHintknop() {
+    if (!knopHints) return;
+    var heeftHints = huidigeSlideHeeftHints();
+    var actie = heeftHints
+      ? (hintsZichtbaar ? "Hints verbergen" : "Hints tonen")
+      : "Geen hints in dit hoofdstuk";
+    knopHints.disabled = !heeftHints;
+    knopHints.setAttribute("aria-pressed", String(heeftHints && hintsZichtbaar));
+    knopHints.setAttribute("aria-label", actie);
+    knopHints.title = actie;
+    knopHints.querySelector("span").textContent = "Hints";
+  }
+
+  function zetHints(toon, onthouden) {
+    hintsZichtbaar = toon;
+    document.documentElement.setAttribute(
+      "data-hints", toon ? "zichtbaar" : "verborgen");
+    if (onthouden) {
+      try { localStorage.setItem(HINTS, toon ? "1" : "0"); } catch (e) { /* niets */ }
+    }
+    toonHintknop();
+  }
+
+  function wisselHints() {
+    zetHints(!hintsZichtbaar, true);
+  }
+
+  // Meteen toepassen, zodat de opgeslagen keuze er al staat wanneer de
+  // pagina voor het eerst wordt getekend.
+  zetHints(bewaardeHints(), false);
 
   /* --- Dag- en nachtstand ---------------------------------------------- */
 
@@ -103,6 +160,10 @@
       try { localStorage.setItem(THEMA, naam); } catch (e) { /* niets */ }
     }
     if (knopThema) toonThemaknop(naam);
+    // De interactieve grafieken tekenen zelf; ze lezen op dit signaal de
+    // kleuren opnieuw uit. De 3D-figuren hebben het niet nodig: die keert
+    // presentatie.css om met een filter.
+    document.dispatchEvent(new CustomEvent("pres:thema", { detail: naam }));
   }
 
   function huidigThema() {
@@ -177,31 +238,75 @@
     var voorwerk = el("div", "pres-voorwerk");
     voorwerk.hidden = true;
 
-    function nieuweSlide(kop) {
-      var s = el("section", "slide");
-      var niveau = kop ? (NIVEAU[kop.tagName] || 3) : 1;
+    function kopgegevens(kop) {
       var nummer = "";
-      var titel = document.title || "Titel";
-      if (kop) {
-        var nr = kop.querySelector(".sectionnumber");
-        if (nr) nummer = nr.textContent.trim();
-        // De titel zonder het nummer: dat leest beter in de inhoudstafel en
-        // geeft een korte, stabiele naam voor in de adresbalk.
-        titel = Array.prototype.filter.call(kop.childNodes, function (n) {
-          return !(n.classList && n.classList.contains("sectionnumber"));
-        }).map(function (n) { return n.textContent; }).join("").trim();
-      }
+      var nr = kop.querySelector(".sectionnumber");
+      if (nr) nummer = nr.textContent.trim();
+      var titel = Array.prototype.filter.call(kop.childNodes, function (n) {
+        return !(n.classList && n.classList.contains("sectionnumber"));
+      }).map(function (n) { return n.textContent; }).join("").trim();
       var naam = slug(titel, "slide");
-      // Twee koppen mogen dezelfde tekst hebben; houd de anker-id uniek.
       if (gebruikt[naam]) naam = naam + "-" + (++gebruikt[naam]);
       else gebruikt[naam] = 1;
-      s.id = naam;
-      s.dataset.niveau = String(niveau);
+      return {
+        kop: kop,
+        niveau: NIVEAU[kop.tagName] || 3,
+        nummer: nummer,
+        titel: titel,
+        id: naam
+      };
+    }
+
+    function voegNavigatieToe(s, gegevens) {
+      gegevens.slide = s;
+      navigatie.push(gegevens);
+      if (!s.id) s.id = gegevens.id;
+    }
+
+    function nieuweSlide(kop) {
+      var s = el("section", "slide");
+      var titel = document.title || "Titel";
+      var gegevens = null;
+      if (kop) {
+        gegevens = kopgegevens(kop);
+        titel = gegevens.titel;
+      }
+      s.dataset.niveau = String(gegevens ? gegevens.niveau : 1);
       s.dataset.titel = titel;
-      s.dataset.nummer = nummer;
+      s.dataset.nummer = gegevens ? gegevens.nummer : "";
+      if (!gegevens) {
+        s.id = slug(titel, "slide");
+        gebruikt[s.id] = 1;
+      }
       slides.push(s);
       stroom.appendChild(s);
+      if (gegevens) voegNavigatieToe(s, gegevens);
       return s;
+    }
+
+    function voegGroepToe(groep) {
+      var groepskinderen = Array.prototype.slice.call(groep.children);
+      var koppen = groepskinderen.filter(function (kind) {
+        return kind.matches && kind.matches(KOPPEN);
+      });
+      if (!koppen.length) {
+        if (!huidige) voorwerk.appendChild(groep);
+        else huidige.appendChild(groep);
+        return;
+      }
+      huidige = nieuweSlide(koppen[0]);
+      groepskinderen.forEach(function (kind) {
+        if (kind !== koppen[0] && kind.matches && kind.matches(KOPPEN)) {
+          voegNavigatieToe(huidige, kopgegevens(kind));
+        }
+        huidige.appendChild(kind);
+      });
+      var titels = navigatie.filter(function (item) {
+        return item.slide === huidige;
+      }).map(function (item) { return item.titel; });
+      huidige.dataset.titel = titels.join(" · ");
+      huidige.setAttribute("aria-label", titels.join("; "));
+      groep.remove();
     }
 
     kinderen.forEach(function (kind) {
@@ -214,6 +319,19 @@
         huidige.dataset.titel = h1 ? h1.textContent.trim() : document.title;
         huidige.dataset.titelslide = "1";
         huidige.appendChild(kind);
+        navigatie.push({
+          kop: h1,
+          niveau: 1,
+          nummer: "",
+          titel: huidige.dataset.titel,
+          id: huidige.id,
+          slide: huidige
+        });
+        return;
+      }
+
+      if (kind.classList && kind.classList.contains("sameslide")) {
+        voegGroepToe(kind);
         return;
       }
 
@@ -229,6 +347,9 @@
       if (s.textContent.trim() !== "" || s.querySelector("iframe, img, svg")) return true;
       s.remove();
       return false;
+    });
+    navigatie.forEach(function (item) {
+      item.slideIndex = slides.indexOf(item.slide);
     });
   }
 
@@ -262,6 +383,10 @@
       knop.addEventListener("click", function () {
         zetOplossing(blok, blok.classList.contains("pres-verborgen"));
       });
+      blok.addEventListener("click", function (e) {
+        if (e.target.closest("button, a, input, select, textarea, iframe, [role='button']")) return;
+        zetOplossing(blok, blok.classList.contains("pres-verborgen"));
+      });
       blok.appendChild(knop);
       blok.appendChild(inhoud);
       zetOplossing(blok, false);
@@ -270,11 +395,12 @@
     // Losse invulvakjes (\opl) klappen open bij een klik. In wiskundemodus
     // levert MathJax er een <g class="opl-math"> voor af.
     document.querySelectorAll(".opl, .opl-math").forEach(function (vak) {
-      vak.classList.add("pres-verborgen");
       vak.setAttribute("role", "button");
       vak.setAttribute("tabindex", "0");
-      vak.title = "Klik om het antwoord te tonen";
-      function wissel() { vak.classList.toggle("pres-verborgen"); }
+      zetLosseOplossing(vak, false);
+      function wissel() {
+        zetLosseOplossing(vak, vak.classList.contains("pres-verborgen"));
+      }
       vak.addEventListener("click", wissel);
       vak.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); wissel(); }
@@ -289,13 +415,13 @@
     var waarnemer = new MutationObserver(function () {
       document.querySelectorAll(".opl-math:not([data-pres])").forEach(function (vak) {
         vak.dataset.pres = "1";
-        vak.classList.toggle("pres-verborgen", !oplossingenZichtbaar);
+        zetLosseOplossing(vak, oplossingenZichtbaar);
         // De groep zelf bevat enkel de letters van het antwoord; dichtgeklapt
         // valt daar niets te raken. Vang de klik daarom op de hele formule.
         var doel = vak.closest("mjx-container") || vak;
         doel.classList.add("pres-oplformule");
         doel.addEventListener("click", function () {
-          vak.classList.toggle("pres-verborgen");
+          zetLosseOplossing(vak, vak.classList.contains("pres-verborgen"));
         });
       });
     });
@@ -308,13 +434,20 @@
     if (knop) knop.lastChild.textContent = toon ? "Verberg oplossing" : "Toon oplossing";
   }
 
+  function zetLosseOplossing(vak, toon) {
+    vak.classList.toggle("pres-verborgen", !toon);
+    vak.setAttribute("aria-pressed", String(toon));
+    vak.setAttribute("aria-label", toon ? "Antwoord verbergen" : "Antwoord tonen");
+    vak.title = toon ? "Klik om het antwoord te verbergen" : "Klik om het antwoord te tonen";
+  }
+
   function wisselAlleOplossingen(toon) {
     oplossingenZichtbaar = toon;
     document.querySelectorAll(".oplossing").forEach(function (b) {
       zetOplossing(b, toon);
     });
     document.querySelectorAll(".opl, .opl-math").forEach(function (v) {
-      v.classList.toggle("pres-verborgen", !toon);
+      zetLosseOplossing(v, toon);
     });
     knopOplossingen.setAttribute("aria-pressed", String(toon));
     bewaar("oplossingen", toon ? "1" : "0");
@@ -327,15 +460,41 @@
     if (element.classList.contains("oplossing")) {
       zetOplossing(element, toon);
     } else {
-      element.classList.toggle("pres-verborgen", !toon);
+      zetLosseOplossing(element, toon);
     }
   }
 
+  function geanimeerdeFiguur(element) {
+    return Array.prototype.find.call(element.querySelectorAll("iframe"), function (frame) {
+      return frame._stappen && frame._stappen.aantal > 0;
+    });
+  }
+
+  function stapInFiguur(element, richting) {
+    if (!element || !element.classList.contains("oplossing")) return false;
+    var frame = geanimeerdeFiguur(element);
+    if (!frame) return false;
+    var toestand = frame._stappen;
+    var volgende = toestand.stap + richting;
+    if (volgende < 1 || volgende > toestand.aantal) return false;
+    zetFiguurstap(frame, volgende);
+    return true;
+  }
+
   function stapVooruit() {
+    var elementen = slides[index].querySelectorAll(".oplossing, .opl, .opl-math");
+    if (!elementen.length) {
+      toon(index + 1);
+      return;
+    }
+    var zichtbaar = Array.prototype.filter.call(elementen, function (element) {
+      return !element.classList.contains("pres-verborgen");
+    });
+    if (stapInFiguur(zichtbaar[zichtbaar.length - 1], 1)) return;
     if (!oplossingenZichtbaar) {
-      var verborgen = slides[index].querySelector(
-        ".oplossing.pres-verborgen, .opl.pres-verborgen, .opl-math.pres-verborgen"
-      );
+      var verborgen = Array.prototype.find.call(elementen, function (element) {
+        return element.classList.contains("pres-verborgen");
+      });
       if (verborgen) {
         zetOplossingselement(verborgen, true);
         return;
@@ -345,17 +504,21 @@
   }
 
   function stapTerug() {
-    if (!oplossingenZichtbaar) {
-      var zichtbaar = Array.prototype.filter.call(
-        slides[index].querySelectorAll(".oplossing, .opl, .opl-math"),
-        function (element) { return !element.classList.contains("pres-verborgen"); }
-      );
-      if (zichtbaar.length) {
-        zetOplossingselement(zichtbaar[zichtbaar.length - 1], false);
-        return;
-      }
+    var elementen = slides[index].querySelectorAll(".oplossing, .opl, .opl-math");
+    if (!elementen.length) {
+      toon(index - 1);
+      return;
     }
-    toon(index - 1);
+    var zichtbaar = Array.prototype.filter.call(elementen, function (element) {
+      return !element.classList.contains("pres-verborgen");
+    });
+    var huidig = zichtbaar[zichtbaar.length - 1];
+    if (stapInFiguur(huidig, -1)) return;
+    if (!oplossingenZichtbaar && huidig) {
+      zetOplossingselement(huidig, false);
+      return;
+    }
+    if (!huidig) toon(index - 1);
   }
 
   /* --- 3D-figuren ------------------------------------------------------- */
@@ -401,10 +564,25 @@
       doos.appendChild(frame);
 
       var balk = el("div", "pres-figuurbalk");
+      // Een figuur kan in een verbergbare oplossing staan. Bedieningsklikken
+      // horen uitsluitend bij de figuur en mogen die bovenliggende oplossing
+      // nooit open- of dichtklappen.
+      balk.addEventListener("click", function (e) { e.stopPropagation(); });
+
+      frame._stappen = { stap: 1, aantal: 0, timer: null, knoppen: null };
+      // Het iframe kan vanuit de lokale file:-site al geladen zijn voordat
+      // zijn eerste melding verwerkt wordt. Deze vraag is tegelijk de
+      // expliciete beginstand bij iedere nieuwe WebGL-context.
+      frame.addEventListener("load", function () {
+        var stap = frame._herstelStap || 1;
+        frame._herstelStap = null;
+        frame.contentWindow.postMessage({ type: "asy-stap", stap: stap }, "*");
+      });
 
       // Op een beamer is een figuur van 28vh klein voor de achterste bank.
       // Deze knop legt ze over het hele podium; Escape brengt ze terug.
       var groot = el("button", "pres-knop");
+      groot.classList.add("pres-figuur-grootknop");
       groot.type = "button";
       groot.title = "Deze figuur groot tonen (Escape sluit ze weer)";
       groot.setAttribute("aria-pressed", "false");
@@ -420,13 +598,147 @@
       if (!frame.hasAttribute("data-vast")) {
         var reset = el("button", "pres-knop");
         reset.type = "button";
-        reset.title = "Zet deze figuur terug in haar beginstand";
+        reset.title = "Herstel de oorspronkelijke rotatie en zoom";
         reset.appendChild(icoon(ICOON.herstel));
         reset.appendChild(el("span", null, "Reset"));
         reset.addEventListener("click", function () { herstelFiguur(frame); });
         balk.appendChild(reset);
       }
       doos.appendChild(balk);
+    });
+
+    window.addEventListener("message", function (e) {
+      var frame = Array.prototype.find.call(document.querySelectorAll("iframe"),
+        function (kandidaat) { return kandidaat.contentWindow === e.source; });
+      var bericht = e.data;
+      if (!frame || !bericht || bericht.type !== "asy-stappen") return;
+      var toestand = frame._stappen;
+      toestand.stap = bericht.stap;
+      toestand.aantal = bericht.aantal;
+      if (toestand.timer && toestand.stap >= toestand.aantal) stopStapspel(frame);
+      if (!toestand.knoppen) voegStapknoppenToe(frame);
+      werkStapknoppenBij(frame);
+    });
+  }
+
+  function stapknop(icoonpad, tekst, titel, actie) {
+    var knop = el("button", "pres-knop pres-stapknop");
+    knop.type = "button";
+    knop.title = titel;
+    knop.setAttribute("aria-label", titel);
+    knop.appendChild(icoon(icoonpad));
+    knop.appendChild(el("span", null, tekst));
+    knop.addEventListener("click", actie);
+    return knop;
+  }
+
+  function stopStapspel(frame) {
+    var toestand = frame._stappen;
+    if (toestand.timer) clearInterval(toestand.timer);
+    toestand.timer = null;
+  }
+
+  function zetFiguurstap(frame, stap) {
+    stopStapspel(frame);
+    frame.contentWindow.postMessage({ type: "asy-stap", stap: stap }, "*");
+  }
+
+  function voegStapknoppenToe(frame) {
+    var toestand = frame._stappen;
+    var balk = frame.parentNode.querySelector(".pres-figuurbalk");
+    var groot = balk.firstChild;
+    var begin = stapknop(ICOON.begin, "Begin", "Toon de eerste constructiestap",
+      function () { zetFiguurstap(frame, 1); });
+    var vorige = stapknop(ICOON.links, "Vorige", "Toon de vorige constructiestap",
+      function () { zetFiguurstap(frame, toestand.stap - 1); });
+    var volgende = stapknop(ICOON.rechts, "Volgende", "Toon de volgende constructiestap",
+      function () { zetFiguurstap(frame, toestand.stap + 1); });
+    var einde = stapknop(ICOON.einde, "Einde", "Toon de volledige constructie",
+      function () { zetFiguurstap(frame, toestand.aantal); });
+    var speel = stapknop(ICOON.speel, "Play", "Speel de constructiestappen af", function () {
+      if (toestand.timer) {
+        stopStapspel(frame);
+        werkStapknoppenBij(frame);
+        return;
+      }
+      if (toestand.stap === toestand.aantal) {
+        frame.contentWindow.postMessage({ type: "asy-stap", stap: 1 }, "*");
+        toestand.stap = 1;
+      }
+      toestand.timer = setInterval(function () {
+        if (toestand.stap >= toestand.aantal) {
+          stopStapspel(frame);
+          werkStapknoppenBij(frame);
+        } else {
+          frame.contentWindow.postMessage({ type: "asy-stap", stap: toestand.stap + 1 }, "*");
+        }
+      }, 1500);
+      werkStapknoppenBij(frame);
+    });
+    [begin, vorige, volgende, einde, speel].forEach(function (knop) {
+      balk.insertBefore(knop, groot);
+    });
+    toestand.knoppen = { begin: begin, vorige: vorige, volgende: volgende,
+      einde: einde, speel: speel };
+    // De bediening verschijnt pas wanneer de actieve WebGL-figuur meldt dat
+    // ze stappen ondersteunt. Vestig dan eenmalig en zonder maatverandering
+    // de aandacht op de knop waarmee de constructie afgespeeld wordt.
+    speel.addEventListener("animationend", function () {
+      speel.classList.remove("pres-speel-attentie");
+    }, { once: true });
+    requestAnimationFrame(function () {
+      speel.classList.add("pres-speel-attentie");
+    });
+  }
+
+  function werkStapknoppenBij(frame) {
+    var toestand = frame._stappen;
+    var knoppen = toestand.knoppen;
+    if (!knoppen) return;
+    knoppen.begin.disabled = knoppen.vorige.disabled = toestand.stap <= 1;
+    knoppen.einde.disabled = knoppen.volgende.disabled = toestand.stap >= toestand.aantal;
+    knoppen.speel.replaceChild(icoon(toestand.timer ? ICOON.pauze : ICOON.speel),
+      knoppen.speel.firstChild);
+    knoppen.speel.querySelector("span").textContent = toestand.timer ? "Pauze" : "Play";
+    knoppen.speel.title = toestand.timer ? "Pauzeer de constructiestappen" :
+      "Speel de constructiestappen af";
+    knoppen.speel.setAttribute("aria-label", knoppen.speel.title);
+    knoppen.speel.setAttribute("aria-pressed", String(Boolean(toestand.timer)));
+  }
+
+  /* --- Interactieve grafieken -------------------------------------------- */
+
+  // Een interactieve grafiek is geen Asymptote-iframe: ze tekent in de pagina
+  // zelf. Ze krijgt wel dezelfde bediening, want voor wie in de klas kijkt is
+  // het gewoon weer een figuur. Groot werkt op het kader, Reset gaat als
+  // gebeurtenis naar interactieve-grafieken.js, dat weet wat de beginstand is.
+  function bereidGrafiekenVoor() {
+    document.querySelectorAll(".interactieve-grafiek").forEach(function (fig) {
+      fig.classList.add("pres-figuur");
+      var balk = el("div", "pres-figuurbalk");
+
+      var groot = el("button", "pres-knop");
+      groot.type = "button";
+      groot.title = "Deze grafiek groot tonen (Escape sluit ze weer)";
+      groot.setAttribute("aria-pressed", "false");
+      groot.appendChild(icoon(ICOON.vergroot));
+      groot.appendChild(el("span", null, "Groot"));
+      groot.addEventListener("click", function () {
+        zetGroteFiguur(fig, !fig.classList.contains("pres-figuur-groot"));
+      });
+      balk.appendChild(groot);
+
+      var reset = el("button", "pres-knop");
+      reset.type = "button";
+      reset.title = "Zet deze grafiek terug in haar beginstand";
+      reset.appendChild(icoon(ICOON.herstel));
+      reset.appendChild(el("span", null, "Reset"));
+      reset.addEventListener("click", function () {
+        fig.dispatchEvent(new CustomEvent("pres:herstel", { bubbles: true }));
+      });
+      balk.appendChild(reset);
+
+      fig.appendChild(balk);
     });
   }
 
@@ -438,9 +750,13 @@
     if (groteFiguur && groteFiguur !== doos) zetGroteFiguur(groteFiguur, false);
     doos.classList.toggle("pres-figuur-groot", groot);
     document.body.classList.toggle("pres-figuur-open", groot);
-    var knop = doos.querySelector(".pres-figuurbalk .pres-knop");
+    var knop = doos.querySelector(".pres-figuurbalk .pres-figuur-grootknop");
     if (knop) knop.setAttribute("aria-pressed", String(groot));
     groteFiguur = groot ? doos : null;
+    // Een tekening in de pagina zelf moet weten hoeveel plaats ze nu heeft;
+    // een iframe krijgt vanzelf een resize.
+    doos.toggleAttribute("data-grafiek-groot", groot);
+    doos.dispatchEvent(new CustomEvent("pres:zichtbaar", { bubbles: true }));
   }
 
   function activeerFiguren(slide, aan) {
@@ -448,6 +764,7 @@
       if (aan) {
         if (!frame.getAttribute("src")) frame.setAttribute("src", frame.dataset.bron);
       } else if (frame.getAttribute("src")) {
+        if (frame._stappen) stopStapspel(frame);
         frame.removeAttribute("src");
       }
     });
@@ -456,15 +773,20 @@
   // De WebGL-viewer van Asymptote luistert naar de toets "h" om de camera
   // terug naar huis te sturen. Lukt dat niet, dan herladen we het frame.
   function herstelFiguur(frame) {
+    var stap = frame._stappen && frame._stappen.aantal ? frame._stappen.stap : null;
     try {
       var doc = frame.contentDocument;
       if (doc && doc.readyState === "complete") {
         doc.dispatchEvent(new KeyboardEvent("keydown", { key: "h", bubbles: true }));
+        if (stap) {
+          frame.contentWindow.postMessage({ type: "asy-stap", stap: stap }, "*");
+        }
         return;
       }
     } catch (e) {
       /* ander origin of nog niet geladen: hieronder herladen we gewoon. */
     }
+    frame._herstelStap = stap;
     frame.removeAttribute("src");
     frame.setAttribute("src", frame.dataset.bron);
   }
@@ -475,6 +797,7 @@
     slide.querySelectorAll("iframe").forEach(function (frame) {
       if (!frame.hasAttribute("data-vast")) herstelFiguur(frame);
     });
+    slide.dispatchEvent(new CustomEvent("pres:herstel", { bubbles: true }));
   }
 
   /* --- Navigatie -------------------------------------------------------- */
@@ -489,7 +812,11 @@
     index = nieuw;
     var slide = slides[index];
     slide.classList.add("pres-actief");
+    toonHintknop();
     activeerFiguren(slide, true);
+    // Een grafiek die in de pagina zelf tekent, kon zolang haar slide
+    // verborgen was niets meten. Dit signaal is haar startsein.
+    slide.dispatchEvent(new CustomEvent("pres:zichtbaar", { bubbles: true }));
     podium.scrollTop = 0;
 
     knopVorige.disabled = index === 0;
@@ -503,9 +830,10 @@
     melding.textContent = zonderWiskunde(slide.dataset.titel) +
       ", slide " + (index + 1) + " van " + slides.length;
 
-    zijbalk.querySelectorAll("a").forEach(function (a, i) {
-      a.classList.toggle("pres-huidig", i === index);
-      if (i === index) {
+    zijbalk.querySelectorAll("a[data-index]").forEach(function (a) {
+      var actief = Number(a.dataset.index) === index;
+      a.classList.toggle("pres-huidig", actief);
+      if (actief) {
         var top = a.offsetTop - zijbalk.clientHeight / 2;
         if (Math.abs(zijbalk.scrollTop - top) > zijbalk.clientHeight / 2) {
           zijbalk.scrollTop = Math.max(0, top);
@@ -521,7 +849,8 @@
   function naarHash(vanLaden) {
     var id = decodeURIComponent(location.hash.slice(1));
     if (!id) return false;
-    var i = slides.findIndex(function (s) { return s.id === id; });
+    var item = navigatie.find(function (n) { return n.id === id; });
+    var i = item ? item.slideIndex : slides.findIndex(function (s) { return s.id === id; });
     if (i < 0) return false;
     toon(i, true);
     return true;
@@ -547,14 +876,15 @@
   function kinderenVan(i) {
     var uit = [];
     if (slides[i].dataset.titelslide) {
-      slides.forEach(function (s, j) {
-        if (j !== i && s.dataset.niveau === "1" && !s.dataset.titelslide) uit.push(j);
+      navigatie.forEach(function (item, j) {
+        if (item.slide !== slides[i] && item.niveau === 1) uit.push(j);
       });
       return uit;
     }
+    var begin = navigatie.findIndex(function (item) { return item.slide === slides[i]; });
     var niveau = Number(slides[i].dataset.niveau);
-    for (var j = i + 1; j < slides.length; j++) {
-      var n = Number(slides[j].dataset.niveau);
+    for (var j = begin + 1; j < navigatie.length; j++) {
+      var n = navigatie[j].niveau;
       if (n <= niveau) break;
       if (n === niveau + 1) uit.push(j);
     }
@@ -564,15 +894,15 @@
   function maakOverzicht(kinderen) {
     var lijst = el("ol", "pres-korteinhoud");
     kinderen.forEach(function (j) {
-      var s = slides[j];
+      var item = navigatie[j];
       var li = el("li");
       var a = el("a");
       // Ook zonder nummer blijft de kolom staan, zodat de titels van
       // genummerde en ongenummerde stukken op dezelfde lijn beginnen.
-      a.appendChild(el("span", "pres-tocnummer", s.dataset.nummer || ""));
+      a.appendChild(el("span", "pres-tocnummer", item.nummer || ""));
       // Zoals in de zijbalk een kopie van de kop, zodat wiskunde in een titel
       // straks door MathJax getypezet wordt.
-      var kop = s.querySelector("h1, h2, h3, h4, h5, h6");
+      var kop = item.kop;
       var tekst = el("span");
       if (kop) {
         Array.prototype.forEach.call(kop.childNodes, function (n) {
@@ -580,11 +910,15 @@
           tekst.appendChild(n.cloneNode(true));
         });
       } else {
-        tekst.textContent = s.dataset.titel;
+        tekst.textContent = item.titel;
       }
       a.appendChild(tekst);
-      a.href = "#" + s.id;
-      a.addEventListener("click", function (e) { e.preventDefault(); toon(j); });
+      a.href = "#" + item.id;
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        toon(item.slideIndex);
+        history.replaceState(null, "", "#" + item.id);
+      });
       li.appendChild(a);
       lijst.appendChild(li);
     });
@@ -714,6 +1048,14 @@
     });
     kop.appendChild(knopOplossingen);
 
+    knopHints = el("button", "pres-knop");
+    knopHints.type = "button";
+    knopHints.appendChild(icoon(ICOON.lamp));
+    knopHints.appendChild(el("span", "pres-verberg-smal"));
+    knopHints.addEventListener("click", wisselHints);
+    toonHintknop();
+    kop.appendChild(knopHints);
+
     // Geen resetknop in de balk: elke figuur krijgt er zelf een naast zich,
     // en de sneltoets r blijft alles op deze slide herstellen.
 
@@ -772,18 +1114,20 @@
     zijbalk.appendChild(zoekdoos);
 
     var lijst = el("ol");
-    slides.forEach(function (s, i) {
-      var li = el("li", "pres-niveau-" + s.dataset.niveau);
+    navigatie.forEach(function (item) {
+      var s = item.slide;
+      var i = item.slideIndex;
+      var li = el("li", "pres-niveau-" + item.niveau);
       var a = el("a");
       // Ook zonder nummer blijft de kolom staan, zodat titels van hetzelfde
       // niveau steeds op dezelfde plaats beginnen. De cursustitel zelf heeft
       // geen nummerkolom nodig.
       if (!s.dataset.titelslide) {
-        a.appendChild(el("span", "pres-tocnummer", s.dataset.nummer || ""));
+        a.appendChild(el("span", "pres-tocnummer", item.nummer || ""));
       }
       // Een kopie van de kop, niet enkel de tekst: staat er wiskunde in de
       // titel, dan typezet MathJax die straks ook hier.
-      var kop = s.querySelector("h1, h2, h3, h4, h5, h6");
+      var kop = item.kop;
       var tekst = el("span", "pres-toctitel");
       if (kop) {
         Array.prototype.forEach.call(kop.childNodes, function (n) {
@@ -791,14 +1135,15 @@
           tekst.appendChild(n.cloneNode(true));
         });
       } else {
-        tekst.textContent = s.dataset.titel;
+        tekst.textContent = item.titel;
       }
       a.appendChild(tekst);
-      a.href = "#" + s.id;
+      a.href = "#" + item.id;
       a.dataset.index = String(i);
       a.addEventListener("click", function (e) {
         e.preventDefault();
         toon(i);
+        history.replaceState(null, "", "#" + item.id);
         // Op een telefoon ligt de lijst over de cursus; wie gekozen heeft,
         // wil die slide zien en niet de lijst.
         if (smalScherm()) wisselZijbalk(false);
@@ -865,11 +1210,11 @@
     [
       ["→ · spatie", "volgende slide"],
       ["←", "vorige slide"],
-      ["↓ · Page Down", "volgende oplossing, daarna volgende slide"],
-      ["↑ · Page Up", "vorige oplossing verbergen, daarna vorige slide"],
+      ["↓ · Page Down", "volgende figuurstap, oplossing of slide"],
+      ["↑ · Page Up", "vorige figuurstap, oplossing of slide"],
       ["Home · End", "eerste of laatste slide"],
       ["o", "alle oplossingen tonen of verbergen"],
-      ["r", "3D-figuren van deze slide resetten"],
+      ["r", "figuren van deze slide resetten"],
       ["i", "inhoudstafel tonen of verbergen"],
       ["d", "dag- of nachtstand"],
       ["/", "zoeken in de inhoudstafel"],
@@ -928,6 +1273,15 @@
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       var doel = e.target;
       if (doel && (doel.tagName === "INPUT" || doel.tagName === "TEXTAREA")) return;
+
+      // Staat de focus in een interactieve grafiek, dan horen de pijltjes bij
+      // het punt of de knop daarbinnen, niet bij het bladeren. De overige
+      // sneltoetsen blijven wel gewoon werken.
+      if (doel && doel.closest && doel.closest(".interactieve-grafiek") &&
+          ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", " ",
+           "PageUp", "PageDown", "Home", "End"].indexOf(e.key) >= 0) {
+        return;
+      }
 
       switch (e.key) {
         case "ArrowRight": case " ":
@@ -1012,6 +1366,7 @@
     bereidOplossingenVoor();
     volgWiskundeOplossingen();
     bereidFigurenVoor();
+    bereidGrafiekenVoor();
     bouwChroom(stroom);
     zetOverzichten();
     bindToetsen();
