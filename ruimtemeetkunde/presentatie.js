@@ -518,7 +518,7 @@
       zetOplossingselement(huidig, false);
       return;
     }
-    if (!huidig) toon(index - 1);
+    toon(index - 1);
   }
 
   /* --- 3D-figuren ------------------------------------------------------- */
