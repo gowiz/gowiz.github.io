@@ -3,7 +3,7 @@
  * lwarp levert de volledige cursus als een doorlopende HTML-stroom. Dit
  * script knipt die stroom clientside op in slides, een per concept, en zet er
  * navigatie, verbergbare oplossingen en bediening van de 3D-figuren omheen.
- * Er wordt niets aan de inhoud toegevoegd: alles komt uit het .tex-bestand.
+ * De inhoud komt uit het .tex-bestand; het script voegt alleen bediening toe.
  *
  * Het script draait onderaan de body, dus voor MathJax typezet. Zo hoeft
  * MathJax de knipbeurt niet ongedaan te zien maken.
@@ -15,6 +15,13 @@
   // en \subsubsection van een article-document om in h4, h5 en h6.
   var KOPPEN = "h1, h2, h3, h4, h5, h6";
   var NIVEAU = { H1: 1, H2: 1, H3: 1, H4: 1, H5: 2, H6: 3 };
+
+  // Configureerbare bediening. Swipe-navigatie blijft beschikbaar, maar is
+  // momenteel uitgeschakeld omdat een horizontale veeg soms onbedoeld een
+  // andere slide opent.
+  var CONFIG = {
+    swipeNavigatie: false
+  };
 
   var podium, zijbalk, sluier, teller, voortgang, voortgangbalk, hulpvenster, zoekveld, melding;
   var kopbalk, knopVorige, knopVolgende, knopOplossingen, knopHints,
@@ -73,7 +80,8 @@
     scherm: "M3 5h18v11H3zM9 20h6M12 16v4",
     zon: "M12 7a5 5 0 100 10 5 5 0 000-10M12 1v3M12 20v3M4.2 4.2l2.1 2.1" +
          "M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1",
-    maan: "M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"
+    maan: "M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z",
+    download: "M12 3v12M7 10l5 5 5-5M5 21h14"
   };
 
   // Hierin gaat wat een leerling tussen twee keer kijken wil terugvinden: de
@@ -231,6 +239,8 @@
   function maakSlides(stroom) {
     var kinderen = Array.prototype.slice.call(stroom.children);
     var huidige = null;
+    var inAppendix = false;
+    var appendixPdf = "";
     var gebruikt = Object.create(null);
     // Wat lwarp voor de eigenlijke cursus zet (de macrodefinities voor
     // MathJax) hoort in geen enkele slide thuis, maar moet wel in de pagina
@@ -311,6 +321,8 @@
 
     kinderen.forEach(function (kind) {
       var kop = kind.matches && kind.matches(KOPPEN) ? kind : null;
+      var appendixMarker = kind.classList && kind.classList.contains("cursusappendix")
+        ? kind : kind.querySelector && kind.querySelector(".cursusappendix");
 
       // Het blok van \maketitle vormt de openingsslide.
       if (kind.classList && kind.classList.contains("cursustitel")) {
@@ -335,7 +347,28 @@
         return;
       }
 
-      if (kop) huidige = nieuweSlide(kop);
+      // \appendix zet een lege markering in de HTML-stroom. Vanaf daar vormt
+      // alle resterende inhoud één slide; eventuele volgende koppen blijven
+      // wel afzonderlijk bereikbaar via de navigatie.
+      if (appendixMarker) {
+        inAppendix = true;
+        var appendixLink = appendixMarker.querySelector("a[href]");
+        appendixPdf = appendixLink ? appendixLink.getAttribute("href") : "";
+        kind.remove();
+        return;
+      }
+
+      if (kop) {
+        if (inAppendix && huidige && huidige.dataset.appendix) {
+          voegNavigatieToe(huidige, kopgegevens(kop));
+        } else {
+          huidige = nieuweSlide(kop);
+          if (inAppendix) {
+            huidige.dataset.appendix = "1";
+            huidige.dataset.appendixPdf = appendixPdf;
+          }
+        }
+      }
       if (!huidige) { voorwerk.appendChild(kind); return; }
       huidige.appendChild(kind);
     });
@@ -347,6 +380,16 @@
       if (s.textContent.trim() !== "" || s.querySelector("iframe, img, svg")) return true;
       s.remove();
       return false;
+    });
+    slides.forEach(function (s) {
+      if (!s.dataset.appendixPdf) return;
+      var download = el("a", "pres-knop pres-appendix-download", "Download als PDF");
+      download.href = s.dataset.appendixPdf;
+      download.setAttribute("download", "");
+      download.prepend(icoon(ICOON.download));
+      var titel = s.querySelector(KOPPEN);
+      if (titel) titel.insertAdjacentElement("afterend", download);
+      else s.prepend(download);
     });
     navigatie.forEach(function (item) {
       item.slideIndex = slides.indexOf(item.slide);
@@ -445,6 +488,16 @@
     oplossingenZichtbaar = toon;
     document.querySelectorAll(".oplossing").forEach(function (b) {
       zetOplossing(b, toon);
+      b.querySelectorAll("iframe").forEach(function (frame) {
+        if (!frame._stappen) return;
+        frame._toonEindstap = toon;
+        if (toon) {
+          if (frame._stappen.aantal > 0) {
+            frame._toonEindstap = false;
+            zetFiguurstap(frame, frame._stappen.aantal);
+          }
+        }
+      });
     });
     document.querySelectorAll(".opl, .opl-math").forEach(function (v) {
       zetLosseOplossing(v, toon);
@@ -615,6 +668,10 @@
       var toestand = frame._stappen;
       toestand.stap = bericht.stap;
       toestand.aantal = bericht.aantal;
+      if (frame._toonEindstap) {
+        frame._toonEindstap = false;
+        zetFiguurstap(frame, toestand.aantal);
+      }
       if (toestand.timer && toestand.stap >= toestand.aantal) stopStapspel(frame);
       if (!toestand.knoppen) voegStapknoppenToe(frame);
       werkStapknoppenBij(frame);
@@ -762,6 +819,7 @@
   function activeerFiguren(slide, aan) {
     slide.querySelectorAll("iframe").forEach(function (frame) {
       if (aan) {
+        frame._toonEindstap = oplossingenZichtbaar && Boolean(frame.closest(".oplossing"));
         if (!frame.getAttribute("src")) frame.setAttribute("src", frame.dataset.bron);
       } else if (frame.getAttribute("src")) {
         if (frame._stappen) stopStapspel(frame);
@@ -865,6 +923,7 @@
   // stukje tekst, dan komt het lijstje daaronder.
   function zetOverzichten() {
     slides.forEach(function (s, i) {
+      if (s.dataset.appendix) return;
       var kinderen = kinderenVan(i);
       if (kinderen.length) s.appendChild(maakOverzicht(kinderen));
     });
@@ -1313,23 +1372,25 @@
       e.preventDefault();
     });
 
-    // Vegen op een tablet. Binnen een figuur niet, daar draait het gebaar de
-    // 3D-scene; die zit toch in een iframe en vangt zijn eigen aanrakingen.
-    var startX = null, startY = null;
-    podium.addEventListener("touchstart", function (e) {
-      if (e.touches.length !== 1) { startX = null; return; }
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    }, { passive: true });
-    podium.addEventListener("touchend", function (e) {
-      if (startX === null) return;
-      var dx = e.changedTouches[0].clientX - startX;
-      var dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-        toon(index + (dx < 0 ? 1 : -1));
-      }
-      startX = null;
-    }, { passive: true });
+    if (CONFIG.swipeNavigatie) {
+      // Vegen op een tablet. Binnen een figuur niet, daar draait het gebaar de
+      // 3D-scene; die zit toch in een iframe en vangt zijn eigen aanrakingen.
+      var startX = null, startY = null;
+      podium.addEventListener("touchstart", function (e) {
+        if (e.touches.length !== 1) { startX = null; return; }
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }, { passive: true });
+      podium.addEventListener("touchend", function (e) {
+        if (startX === null) return;
+        var dx = e.changedTouches[0].clientX - startX;
+        var dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          toon(index + (dx < 0 ? 1 : -1));
+        }
+        startX = null;
+      }, { passive: true });
+    }
 
     window.addEventListener("hashchange", function () { naarHash(false); });
 

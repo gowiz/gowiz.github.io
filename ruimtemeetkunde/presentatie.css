@@ -268,6 +268,16 @@ body.pres-klaar {
   flex: none;
 }
 
+.slide[data-appendix] > .pres-appendix-download {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+  width: max-content;
+  margin: 0 0 1rem;
+  text-decoration: none;
+}
+
 /* Hints blijven standaard verborgen, ook in de korte tijd voor
  * presentatie.js gestart is. De lezer kan ze voor alle hoofdstukken tegelijk
  * aanzetten; het script bewaart die keuze. */
@@ -425,6 +435,23 @@ body.pres-zijbalk-dicht .pres-sluier {
 
 .slide.pres-actief {
   display: block;
+}
+
+/* Op een appendix deelt de titel haar eerste rij met de download. Alle
+ * volgende inhoud neemt opnieuw de volle tekstbreedte in. */
+.slide[data-appendix].pres-actief {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 1rem;
+}
+
+.slide[data-appendix] > * {
+  grid-column: 1 / -1;
+}
+
+.slide[data-appendix] > :is(h1, h2, h3, h4, h5, h6):first-child {
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .slide > .pres-kruimel {
@@ -1185,6 +1212,7 @@ kbd {
   .pres-voet,
   .pres-hulp,
   .pres-figuurbalk,
+  .pres-appendix-download,
   .pres-onthul {
     display: none !important;
   }
