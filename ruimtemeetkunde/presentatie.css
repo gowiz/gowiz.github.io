@@ -268,6 +268,35 @@ body.pres-klaar {
   flex: none;
 }
 
+/* Kort, lang en volledig vormen samen een knop in drie delen. */
+.pres-bladeren {
+  display: inline-flex;
+  flex: none;
+}
+
+.pres-bladeren .pres-knop {
+  border-radius: 0;
+}
+
+.pres-bladeren .pres-knop + .pres-knop {
+  margin-left: -1px;
+}
+
+.pres-bladeren .pres-knop:first-child {
+  border-radius: var(--straal) 0 0 var(--straal);
+}
+
+.pres-bladeren .pres-knop:last-child {
+  border-radius: 0 var(--straal) var(--straal) 0;
+}
+
+/* Zo valt de gekleurde rand niet half onder de buurknop. */
+.pres-bladeren .pres-knop:hover,
+.pres-bladeren .pres-knop[aria-pressed="true"] {
+  position: relative;
+  z-index: 1;
+}
+
 .slide[data-appendix] > .pres-appendix-download {
   grid-column: 2;
   grid-row: 1;
@@ -435,6 +464,42 @@ body.pres-zijbalk-dicht .pres-sluier {
 
 .slide.pres-actief {
   display: block;
+}
+
+/* Wie naar een slide of een kop springt, ziet ze met dezelfde ruimte erboven
+ * als bovenaan het podium. */
+.slide,
+.slide > :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: 1.5rem;
+}
+
+/* Bij lang en volledig staan de slides van een sectie onder elkaar en lezen
+ * ze als een blad: de kaders sluiten op elkaar aan, en pas een nieuwe sectie
+ * begint een nieuw kader. */
+html:not([data-bladeren="kort"]) .slide.pres-actief:has(+ .slide.pres-actief:not([data-niveau="1"])) {
+  border-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-bottom: .5rem;
+}
+
+html:not([data-bladeren="kort"]) .slide.pres-actief + .slide.pres-actief:not([data-niveau="1"]) {
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  padding-top: .5rem;
+}
+
+html:not([data-bladeren="kort"]) .slide.pres-actief + .slide.pres-actief[data-niveau="1"] {
+  margin-top: 1.5rem;
+}
+
+/* Het kruimelspoor en het lijstje van wat eronder valt, zijn overbodig
+ * wanneer die onderdelen er meteen onder staan. Op de titelslide blijft het
+ * lijstje: daar is het de inhoudstafel van het hoofdstuk. */
+html:not([data-bladeren="kort"]) .slide > .pres-kruimel,
+html:not([data-bladeren="kort"]) .slide:not([data-titelslide]) > .pres-korteinhoud {
+  display: none;
 }
 
 /* Op een appendix deelt de titel haar eerste rij met de download. Alle
@@ -1172,13 +1237,32 @@ kbd {
 
 }
 
-/* De opschriften bij de knoppen vallen pas veel later weg dan de zijbalk gaat
+/* De kopbalk heeft meer knoppen dan de voetbalk. Met opschriften vraagt hij
+ * ongeveer 75rem; daaronder blijven enkel de iconen staan, zodat de titel
+ * niet tot een paar letters wordt afgeknipt. */
+@media (max-width: 75rem) {
+  .pres-verberg-kop {
+    display: none;
+  }
+}
+
+/* De opschriften bij de knoppen in de voetbalk vallen pas veel later weg dan de zijbalk gaat
  * zweven: een tablet en een telefoon in liggende stand hebben ruimte zat voor
  * "Oplossingen" en "Volgende". Enkel op een telefoon in staande stand blijft
  * er van de kopbalk anders niets over. */
 @media (max-width: 34rem) {
   .pres-verberg-smal {
     display: none;
+  }
+
+  /* Drie knoppen naast elkaar passen niet meer. Enkel de gekozen stand blijft
+   * staan; een tik erop gaat naar de volgende. */
+  .pres-bladeren .pres-knop:not([aria-pressed="true"]) {
+    display: none;
+  }
+
+  .pres-bladeren .pres-knop[aria-pressed="true"] {
+    border-radius: var(--straal);
   }
 }
 

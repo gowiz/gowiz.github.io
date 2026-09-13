@@ -29,6 +29,18 @@
   var slides = [];
   var navigatie = [];
   var index = 0;
+  // De slides die nu in beeld staan. Kort is dat er een, lang de hele sectie
+  // van de huidige slide, volledig alles.
+  var zichtbaar = [];
+  // Elke sectie is een lijst slide-indexen, van een kop op niveau 1 tot vlak
+  // voor de volgende. sectieVan[i] zegt in welke sectie slide i valt.
+  var secties = [];
+  var sectieVan = [];
+  var bladeren = "kort";
+  var knoppenBladeren = {};
+  // Terwijl het script zelf scrolt, mag het volgen van de scrollpositie de
+  // gekozen slide niet overschrijven.
+  var negeerScroll = false, negeerTimer = null;
   var oplossingenZichtbaar = false;
   var hintsZichtbaar = false;
   var groteFiguur = null;
@@ -81,6 +93,9 @@
     zon: "M12 7a5 5 0 100 10 5 5 0 000-10M12 1v3M12 20v3M4.2 4.2l2.1 2.1" +
          "M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1",
     maan: "M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z",
+    kort: "M4 6h16v12H4z",
+    lang: "M4 3h16v8H4zM4 13h16v8H4z",
+    volledig: "M6 2h12v20H6zM9 6h6M9 10h6M9 14h6M9 18h6",
     download: "M12 3v12M7 10l5 5 5-5M5 21h14"
   };
 
@@ -108,9 +123,10 @@
   }
 
   function huidigeSlideHeeftHints() {
-    var slide = slides[index];
-    return Boolean(slide &&
-      (slide.querySelector(".hint") || /\\hint\s*\{/.test(slide.textContent)));
+    return zichtbaar.some(function (j) {
+      var slide = slides[j];
+      return Boolean(slide.querySelector(".hint") || /\\hint\s*\{/.test(slide.textContent));
+    });
   }
 
   function toonHintknop() {
@@ -143,6 +159,38 @@
   // Meteen toepassen, zodat de opgeslagen keuze er al staat wanneer de
   // pagina voor het eerst wordt getekend.
   zetHints(bewaardeHints(), false);
+
+  /* --- Bladeren: kort, lang of volledig --------------------------------- */
+
+  // Hoeveel er tegelijk in beeld staat. Kort toont een slide per keer, lang
+  // een hele sectie en volledig het hele hoofdstuk; bij lang en volledig
+  // springen Vorige en Volgende per sectie. Net als het thema een voorkeur van
+  // de lezer, dus een sleutel voor alle hoofdstukken samen.
+  var BLADEREN = "pres:bladeren";
+  var BLADERSTANDEN = ["kort", "lang", "volledig"];
+
+  function bewaardBladeren() {
+    try {
+      var b = localStorage.getItem(BLADEREN);
+      return BLADERSTANDEN.indexOf(b) >= 0 ? b : "kort";
+    } catch (e) { return "kort"; }
+  }
+
+  function zetBladeren(naam, onthouden) {
+    bladeren = naam;
+    document.documentElement.setAttribute("data-bladeren", naam);
+    if (onthouden) {
+      try { localStorage.setItem(BLADEREN, naam); } catch (e) { /* niets */ }
+    }
+    Object.keys(knoppenBladeren).forEach(function (k) {
+      knoppenBladeren[k].setAttribute("aria-pressed", String(k === naam));
+    });
+    // De lezer blijft bij de slide waar hij stond, ook als die nu midden in
+    // een langere pagina staat.
+    if (zichtbaar.length) toon(index, { forceer: true });
+  }
+
+  zetBladeren(bewaardBladeren(), false);
 
   /* --- Dag- en nachtstand ---------------------------------------------- */
 
@@ -248,6 +296,26 @@
     var voorwerk = el("div", "pres-voorwerk");
     voorwerk.hidden = true;
 
+    // cursus.cls zet deze markering vlak voor elke \subsubsection*. Zo blijft
+    // de subtitel op de lopende slide en komt hij niet in de navigatie terecht.
+    stroom.querySelectorAll(".cursus-subtitel-op-slide").forEach(function (marker) {
+      // lwarp kan de lege span in een eigen, verder lege alinea wikkelen.
+      var drager = marker.parentElement;
+      var kop = marker.nextElementSibling || (drager && drager.nextElementSibling);
+      // Na een omgeving zoals oplossing belandt de markering buiten elke
+      // alinea, gevolgd door een lege <p> die lwarp's losse </p> achterlaat.
+      while (kop && kop.tagName === "P" && !kop.children.length && kop.textContent.trim() === "") {
+        kop = kop.nextElementSibling;
+      }
+      if (kop && kop.matches(KOPPEN)) kop.dataset.opLopendeSlide = "1";
+      if (drager && drager.tagName === "P" && drager.textContent.trim() === "") {
+        drager.remove();
+      } else {
+        marker.remove();
+      }
+    });
+    kinderen = Array.prototype.slice.call(stroom.children);
+
     function kopgegevens(kop) {
       var nummer = "";
       var nr = kop.querySelector(".sectionnumber");
@@ -306,7 +374,8 @@
       }
       huidige = nieuweSlide(koppen[0]);
       groepskinderen.forEach(function (kind) {
-        if (kind !== koppen[0] && kind.matches && kind.matches(KOPPEN)) {
+        if (kind !== koppen[0] && kind.matches && kind.matches(KOPPEN) &&
+            !kind.dataset.opLopendeSlide) {
           voegNavigatieToe(huidige, kopgegevens(kind));
         }
         huidige.appendChild(kind);
@@ -359,7 +428,9 @@
       }
 
       if (kop) {
-        if (inAppendix && huidige && huidige.dataset.appendix) {
+        if (kop.dataset.opLopendeSlide && huidige) {
+          // De kop blijft als subtitel in de inhoud van de huidige slide.
+        } else if (inAppendix && huidige && huidige.dataset.appendix) {
           voegNavigatieToe(huidige, kopgegevens(kop));
         } else {
           huidige = nieuweSlide(kop);
@@ -394,6 +465,26 @@
     navigatie.forEach(function (item) {
       item.slideIndex = slides.indexOf(item.slide);
     });
+  }
+
+  // De titelslide en de appendix staan elk op zich; verder begint een sectie
+  // bij elke kop op niveau 1.
+  function maakSecties() {
+    slides.forEach(function (s, i) {
+      var vorige = slides[i - 1];
+      if (!secties.length || s.dataset.niveau === "1" || s.dataset.titelslide ||
+          s.dataset.appendix || vorige.dataset.titelslide || vorige.dataset.appendix) {
+        secties.push([]);
+      }
+      secties[secties.length - 1].push(i);
+      sectieVan[i] = secties.length - 1;
+    });
+  }
+
+  function paginaVan(i) {
+    if (bladeren === "kort") return [i];
+    if (bladeren === "lang") return secties[sectieVan[i]];
+    return slides.map(function (s, j) { return j; });
   }
 
   /* --- Kruimelspoor per slide ------------------------------------------ */
@@ -816,16 +907,30 @@
     doos.dispatchEvent(new CustomEvent("pres:zichtbaar", { bubbles: true }));
   }
 
-  function activeerFiguren(slide, aan) {
-    slide.querySelectorAll("iframe").forEach(function (frame) {
-      if (aan) {
-        frame._toonEindstap = oplossingenZichtbaar && Boolean(frame.closest(".oplossing"));
-        if (!frame.getAttribute("src")) frame.setAttribute("src", frame.dataset.bron);
-      } else if (frame.getAttribute("src")) {
-        if (frame._stappen) stopStapspel(frame);
-        frame.removeAttribute("src");
-      }
+  // Een figuur laadt wanneer ze in de buurt van het beeld komt en geeft haar
+  // WebGL-context vrij wanneer ze er ver genoeg vandaan is. Een verborgen
+  // slide telt als uit beeld. Zo blijft een volledig hoofdstuk met veel
+  // figuren onder de grens die de browser oplegt.
+  function volgFiguren() {
+    var waarnemer = new IntersectionObserver(function (items) {
+      items.forEach(function (item) {
+        activeerFiguur(item.target, item.isIntersecting);
+      });
+    }, { root: podium, rootMargin: "50% 0px" });
+    document.querySelectorAll("iframe[data-bron]").forEach(function (frame) {
+      waarnemer.observe(frame);
     });
+  }
+
+  function activeerFiguur(frame, aan) {
+    if (aan) {
+      if (frame.getAttribute("src")) return;
+      frame._toonEindstap = oplossingenZichtbaar && Boolean(frame.closest(".oplossing"));
+      frame.setAttribute("src", frame.dataset.bron);
+    } else if (frame.getAttribute("src")) {
+      if (frame._stappen) stopStapspel(frame);
+      frame.removeAttribute("src");
+    }
   }
 
   // De WebGL-viewer van Asymptote luistert naar de toets "h" om de camera
@@ -850,43 +955,65 @@
   }
 
   function herstelAlleFiguren() {
-    var slide = slides[index];
-    if (!slide) return;
-    slide.querySelectorAll("iframe").forEach(function (frame) {
-      if (!frame.hasAttribute("data-vast")) herstelFiguur(frame);
+    zichtbaar.forEach(function (j) {
+      var slide = slides[j];
+      slide.querySelectorAll("iframe").forEach(function (frame) {
+        if (!frame.hasAttribute("data-vast")) herstelFiguur(frame);
+      });
+      slide.dispatchEvent(new CustomEvent("pres:herstel", { bubbles: true }));
     });
-    slide.dispatchEvent(new CustomEvent("pres:herstel", { bubbles: true }));
   }
 
   /* --- Navigatie -------------------------------------------------------- */
 
-  function toon(nieuw, vanHash) {
+  // Opties: vanHash (de adresbalk wees de slide aan), vanScroll (de lezer
+  // scrolde erheen, dus niet zelf scrollen), doel (een kop midden in de slide
+  // om naartoe te scrollen) en forceer (de bladerstand veranderde).
+  function toon(nieuw, opties) {
+    opties = opties || {};
     nieuw = Math.max(0, Math.min(slides.length - 1, nieuw));
-    if (groteFiguur) zetGroteFiguur(groteFiguur, false);
-    if (slides[index] && index !== nieuw) {
-      slides[index].classList.remove("pres-actief");
-      activeerFiguren(slides[index], false);
+    if (groteFiguur && !opties.vanScroll) zetGroteFiguur(groteFiguur, false);
+    var pagina = paginaVan(nieuw);
+    var nieuwePagina = opties.forceer || zichtbaar[0] !== pagina[0] ||
+      zichtbaar.length !== pagina.length;
+    if (nieuwePagina) {
+      zichtbaar.forEach(function (j) {
+        if (pagina.indexOf(j) < 0) slides[j].classList.remove("pres-actief");
+      });
+      zichtbaar = pagina;
+      zichtbaar.forEach(function (j) {
+        slides[j].classList.add("pres-actief");
+        // Een grafiek die in de pagina zelf tekent, kon zolang haar slide
+        // verborgen was niets meten. Dit signaal is haar startsein.
+        slides[j].dispatchEvent(new CustomEvent("pres:zichtbaar", { bubbles: true }));
+      });
     }
     index = nieuw;
     var slide = slides[index];
-    slide.classList.add("pres-actief");
     toonHintknop();
-    activeerFiguren(slide, true);
-    // Een grafiek die in de pagina zelf tekent, kon zolang haar slide
-    // verborgen was niets meten. Dit signaal is haar startsein.
-    slide.dispatchEvent(new CustomEvent("pres:zichtbaar", { bubbles: true }));
-    podium.scrollTop = 0;
 
-    knopVorige.disabled = index === 0;
-    knopVolgende.disabled = index === slides.length - 1;
-    teller.textContent = (index + 1) + " / " + slides.length;
-    voortgang.style.width = ((index + 1) / slides.length * 100) + "%";
-    voortgangbalk.setAttribute("aria-valuenow", String(index + 1));
+    if (!opties.vanScroll) {
+      if (nieuwePagina && index === pagina[0] && !opties.doel) {
+        scrollNaar(null, "instant");
+      } else {
+        scrollNaar(opties.doel || slide, nieuwePagina ? "instant" : "smooth");
+      }
+    }
+
+    var p = positie(), n = aantalPosities();
+    knopVorige.disabled = p === 0;
+    knopVolgende.disabled = p === n - 1;
+    teller.textContent = (p + 1) + " / " + n;
+    voortgang.style.width = ((p + 1) / n * 100) + "%";
+    voortgangbalk.setAttribute("aria-valuemax", String(n));
+    voortgangbalk.setAttribute("aria-valuenow", String(p + 1));
 
     // Een slidewissel verandert de hele pagina zonder dat de focus verspringt;
-    // een schermlezer hoort er anders niets van.
-    melding.textContent = zonderWiskunde(slide.dataset.titel) +
-      ", slide " + (index + 1) + " van " + slides.length;
+    // een schermlezer hoort er anders niets van. Wie zelf scrolt, ziet dat al.
+    if (!opties.vanScroll) {
+      melding.textContent = zonderWiskunde(slide.dataset.titel) +
+        (bladeren === "kort" ? ", slide " : ", sectie ") + (p + 1) + " van " + n;
+    }
 
     zijbalk.querySelectorAll("a[data-index]").forEach(function (a) {
       var actief = Number(a.dataset.index) === index;
@@ -899,18 +1026,145 @@
       }
     });
 
-    if (!vanHash) history.replaceState(null, "", "#" + slide.id);
+    if (!opties.vanHash) history.replaceState(null, "", "#" + slide.id);
     document.title = zonderWiskunde(slide.dataset.titel) + " · " + basisTitel;
     bewaar("slide", slide.id);
+  }
+
+  // Waar de teller en de voortgangsbalk mee rekenen: slides bij kort,
+  // secties bij lang en volledig.
+  function positie() {
+    return bladeren === "kort" ? index : sectieVan[index];
+  }
+
+  function aantalPosities() {
+    return bladeren === "kort" ? slides.length : secties.length;
+  }
+
+  function naarPositie(p) {
+    p = Math.max(0, Math.min(aantalPosities() - 1, p));
+    toon(bladeren === "kort" ? p : secties[p][0]);
+  }
+
+  function blader(richting) {
+    var p = positie() + richting;
+    if (p >= 0 && p < aantalPosities()) naarPositie(p);
+  }
+
+  function scrollNaar(element, gedrag) {
+    negeerScroll = true;
+    clearTimeout(negeerTimer);
+    // Vangnet voor wanneer er niets te scrollen viel en scrollend dus nooit
+    // komt.
+    negeerTimer = setTimeout(function () { negeerScroll = false; }, 1500);
+    if (element) element.scrollIntoView({ block: "start", behavior: gedrag });
+    else podium.scrollTo({ top: 0, behavior: gedrag });
+  }
+
+  // Bij lang en volledig staan meerdere slides onder elkaar. De slide die
+  // bovenaan in beeld staat, geldt dan als de huidige: die kleurt in de
+  // inhoudstafel, komt in de adresbalk en wordt onthouden.
+  function volgScroll() {
+    podium.addEventListener("scroll", function () {
+      if (negeerScroll || bladeren === "kort") return;
+      var grens = podium.getBoundingClientRect().top + podium.clientHeight * 0.25;
+      var gevonden = zichtbaar[0];
+      for (var k = 0; k < zichtbaar.length; k++) {
+        if (slides[zichtbaar[k]].getBoundingClientRect().top > grens) break;
+        gevonden = zichtbaar[k];
+      }
+      if (gevonden !== index) toon(gevonden, { vanScroll: true });
+    }, { passive: true });
+    podium.addEventListener("scrollend", function () {
+      negeerScroll = false;
+      // Wie in volledig scherm op Escape drukt, krijgt het venster al terug
+      // voor we het horen; dan is dit de laatste goede plaats.
+      if (document.fullscreenElement) laatsteAnker = ankerBovenaan();
+    });
+  }
+
+  // Presentatiestand schaalt de hele opmaak en geeft het podium een andere
+  // breedte. Bij lang en volledig staat na die omschakeling op dezelfde
+  // scrollhoogte dus andere tekst. Daarom onthouden we welk stuk bovenaan
+  // stond, en hoe ver erin, en zetten we dat er weer.
+  var laatsteAnker = null, ankerFrame = 0;
+
+  function ankerBovenaan() {
+    var top = podium.getBoundingClientRect().top;
+    var anker = null;
+    for (var k = 0; k < zichtbaar.length && !anker; k++) {
+      if (slides[zichtbaar[k]].getBoundingClientRect().bottom > top) anker = slides[zichtbaar[k]];
+    }
+    if (!anker) return null;
+    // Daal af tot een blok dat klein genoeg is om de plaats precies vast te
+    // leggen: een alinea, een figuur, een oefening.
+    var diep = true;
+    while (diep && anker.getBoundingClientRect().height > podium.clientHeight / 4) {
+      diep = false;
+      for (var c = anker.firstElementChild; c; c = c.nextElementSibling) {
+        var r = c.getBoundingClientRect();
+        if (r.height > 0 && r.bottom > top) {
+          if (r.top <= top) { anker = c; diep = true; }
+          break;
+        }
+      }
+    }
+    var rect = anker.getBoundingClientRect();
+    return { element: anker, deel: rect.height ? (top - rect.top) / rect.height : 0 };
+  }
+
+  function zetAnker(anker) {
+    var r = anker.element.getBoundingClientRect();
+    var verschil = r.top + anker.deel * r.height - podium.getBoundingClientRect().top;
+    // Het podium scrolt standaard zacht; deze correctie moet in hetzelfde
+    // beeld gebeuren, anders ziet de lezer de tekst weg en terug glijden.
+    if (Math.abs(verschil) >= 1) {
+      podium.scrollTo({ top: podium.scrollTop + verschil, behavior: "instant" });
+    }
+  }
+
+  // Het volledig scherm komt pas even later en verandert de maat nog eens,
+  // en figuren kunnen van hoogte veranderen. Hou de plaats daarom een
+  // seconde vast, tenzij de lezer intussen zelf scrolt.
+  function houdAnker(anker) {
+    cancelAnimationFrame(ankerFrame);
+    var einde = performance.now() + 1000;
+    function stop() {
+      cancelAnimationFrame(ankerFrame);
+      podium.removeEventListener("wheel", stop);
+      podium.removeEventListener("touchstart", stop);
+      laatsteAnker = ankerBovenaan();
+    }
+    function stap() {
+      zetAnker(anker);
+      if (performance.now() < einde) ankerFrame = requestAnimationFrame(stap);
+      else stop();
+    }
+    podium.addEventListener("wheel", stop, { passive: true });
+    podium.addEventListener("touchstart", stop, { passive: true });
+    stap();
+  }
+
+  // Een kop die niet bovenaan haar slide staat (bij \sameslide), krijgt de
+  // slide in beeld en daarna die kop bovenaan.
+  function naarNavigatie(item, opties) {
+    opties = opties || {};
+    var eerste = item.slide.querySelector(KOPPEN);
+    if (item.kop && item.kop !== eerste) opties.doel = item.kop;
+    toon(item.slideIndex, opties);
   }
 
   function naarHash(vanLaden) {
     var id = decodeURIComponent(location.hash.slice(1));
     if (!id) return false;
     var item = navigatie.find(function (n) { return n.id === id; });
-    var i = item ? item.slideIndex : slides.findIndex(function (s) { return s.id === id; });
+    if (item) {
+      naarNavigatie(item, { vanHash: true });
+      return true;
+    }
+    var i = slides.findIndex(function (s) { return s.id === id; });
     if (i < 0) return false;
-    toon(i, true);
+    toon(i, { vanHash: true });
     return true;
   }
 
@@ -975,7 +1229,7 @@
       a.href = "#" + item.id;
       a.addEventListener("click", function (e) {
         e.preventDefault();
-        toon(item.slideIndex);
+        naarNavigatie(item);
         history.replaceState(null, "", "#" + item.id);
       });
       li.appendChild(a);
@@ -1050,8 +1304,9 @@
     if (belofte && belofte.catch) belofte.catch(function () { /* niets */ });
   }
 
-  function zetPresentatiestand(aan) {
+  function zetPresentatiestand(aan, anker) {
     var was = document.documentElement.classList.contains("pres-groot");
+    if (aan !== was && !anker) anker = ankerBovenaan();
     document.documentElement.classList.toggle("pres-groot", aan);
     knopPresentatie.setAttribute("aria-pressed", String(aan));
 
@@ -1066,7 +1321,10 @@
       document.body.classList.remove("pres-kop-toon");
       if (groteFiguur) zetGroteFiguur(groteFiguur, false);
     }
-    if (aan !== was) volledigScherm(aan);
+    if (aan !== was) {
+      volledigScherm(aan);
+      if (anker) houdAnker(anker);
+    }
   }
 
   /* --- Chroom rond het podium ------------------------------------------ */
@@ -1101,7 +1359,8 @@
     knopOplossingen.setAttribute("aria-pressed", "false");
     knopOplossingen.title = "Alle oplossingen tonen of verbergen (o)";
     knopOplossingen.appendChild(icoon(ICOON.oog));
-    knopOplossingen.appendChild(el("span", "pres-verberg-smal", "Oplossingen"));
+    knopOplossingen.setAttribute("aria-label", "Oplossingen");
+    knopOplossingen.appendChild(el("span", "pres-verberg-kop", "Oplossingen"));
     knopOplossingen.addEventListener("click", function () {
       wisselAlleOplossingen(!oplossingenZichtbaar);
     });
@@ -1110,7 +1369,7 @@
     knopHints = el("button", "pres-knop");
     knopHints.type = "button";
     knopHints.appendChild(icoon(ICOON.lamp));
-    knopHints.appendChild(el("span", "pres-verberg-smal"));
+    knopHints.appendChild(el("span", "pres-verberg-kop"));
     knopHints.addEventListener("click", wisselHints);
     toonHintknop();
     kop.appendChild(knopHints);
@@ -1118,12 +1377,43 @@
     // Geen resetknop in de balk: elke figuur krijgt er zelf een naast zich,
     // en de sneltoets r blijft alles op deze slide herstellen.
 
+    var groep = el("div", "pres-bladeren");
+    groep.setAttribute("role", "group");
+    groep.setAttribute("aria-label", "Bladeren");
+    [
+      ["kort", "Kort", "Kort: een slide per keer (k)"],
+      ["lang", "Lang", "Lang: een sectie per keer (l)"],
+      ["volledig", "Volledig", "Volledig: het hele hoofdstuk op een pagina (v)"]
+    ].forEach(function (stand) {
+      var knop = el("button", "pres-knop");
+      knop.type = "button";
+      knop.title = stand[2];
+      knop.setAttribute("aria-label", stand[1]);
+      knop.appendChild(icoon(ICOON[stand[0]]));
+      knop.appendChild(el("span", "pres-verberg-kop", stand[1]));
+      knop.setAttribute("aria-pressed", String(stand[0] === bladeren));
+      knop.addEventListener("click", function () {
+        // Op een telefoon staat enkel de gekozen stand in beeld (zie
+        // presentatie.css); een tik erop schuift door naar de volgende.
+        if (stand[0] === bladeren && window.matchMedia("(max-width: 34rem)").matches) {
+          var volgende = BLADERSTANDEN[(BLADERSTANDEN.indexOf(bladeren) + 1) % BLADERSTANDEN.length];
+          zetBladeren(volgende, true);
+        } else {
+          zetBladeren(stand[0], true);
+        }
+      });
+      knoppenBladeren[stand[0]] = knop;
+      groep.appendChild(knop);
+    });
+    kop.appendChild(groep);
+
     knopPresentatie = el("button", "pres-knop");
     knopPresentatie.type = "button";
     knopPresentatie.title = "Volledig scherm met grotere letters, voor de klas (p)";
     knopPresentatie.setAttribute("aria-pressed", "false");
     knopPresentatie.appendChild(icoon(ICOON.scherm));
-    knopPresentatie.appendChild(el("span", "pres-verberg-smal", "Presentatie"));
+    knopPresentatie.setAttribute("aria-label", "Presentatie");
+    knopPresentatie.appendChild(el("span", "pres-verberg-kop", "Presentatie"));
     knopPresentatie.addEventListener("click", function () {
       zetPresentatiestand(!document.documentElement.classList.contains("pres-groot"));
     });
@@ -1162,7 +1452,7 @@
       if (e.key === "Enter") {
         e.preventDefault();
         var eerste = zijbalk.querySelector("li:not([hidden]) > a");
-        if (eerste) { toon(Number(eerste.dataset.index)); zoekveld.blur(); }
+        if (eerste) { naarNavigatie(navigatie[Number(eerste.dataset.nav)]); zoekveld.blur(); }
       } else if (e.key === "Escape") {
         e.preventDefault();
         wisZoek();
@@ -1173,7 +1463,7 @@
     zijbalk.appendChild(zoekdoos);
 
     var lijst = el("ol");
-    navigatie.forEach(function (item) {
+    navigatie.forEach(function (item, j) {
       var s = item.slide;
       var i = item.slideIndex;
       var li = el("li", "pres-niveau-" + item.niveau);
@@ -1199,9 +1489,10 @@
       a.appendChild(tekst);
       a.href = "#" + item.id;
       a.dataset.index = String(i);
+      a.dataset.nav = String(j);
       a.addEventListener("click", function (e) {
         e.preventDefault();
-        toon(i);
+        naarNavigatie(item);
         history.replaceState(null, "", "#" + item.id);
         // Op een telefoon ligt de lijst over de cursus; wie gekozen heeft,
         // wil die slide zien en niet de lijst.
@@ -1220,13 +1511,13 @@
     knopVorige.type = "button";
     knopVorige.appendChild(icoon(ICOON.links));
     knopVorige.appendChild(el("span", "pres-verberg-smal", "Vorige"));
-    knopVorige.addEventListener("click", function () { toon(index - 1); });
+    knopVorige.addEventListener("click", function () { blader(-1); });
 
     knopVolgende = el("button", "pres-knop");
     knopVolgende.type = "button";
     knopVolgende.appendChild(el("span", "pres-verberg-smal", "Volgende"));
     knopVolgende.appendChild(icoon(ICOON.rechts));
-    knopVolgende.addEventListener("click", function () { toon(index + 1); });
+    knopVolgende.addEventListener("click", function () { blader(1); });
 
     teller = el("span", "pres-teller");
 
@@ -1244,7 +1535,7 @@
     balk.addEventListener("click", function (e) {
       var kader = rail.getBoundingClientRect();
       var deel = (e.clientX - kader.left) / kader.width;
-      toon(Math.floor(deel * slides.length));
+      naarPositie(Math.floor(deel * aantalPosities()));
     });
 
     // In presentatiestand is de kopbalk weg; dit is dan de weg terug voor
@@ -1267,11 +1558,12 @@
     kader.appendChild(el("h2", null, "Sneltoetsen"));
     var dl = el("dl");
     [
-      ["→ · spatie", "volgende slide"],
-      ["←", "vorige slide"],
-      ["↓ · Page Down", "volgende figuurstap, oplossing of slide"],
-      ["↑ · Page Up", "vorige figuurstap, oplossing of slide"],
-      ["Home · End", "eerste of laatste slide"],
+      ["→ · spatie", "volgende slide (kort) of sectie (lang, volledig)"],
+      ["←", "vorige slide (kort) of sectie (lang, volledig)"],
+      ["↓ · Page Down", "kort: volgende figuurstap, oplossing of slide; anders scrollen"],
+      ["↑ · Page Up", "kort: vorige figuurstap, oplossing of slide; anders scrollen"],
+      ["Home · End", "eerste of laatste slide of sectie"],
+      ["k · l · v", "bladeren: kort, lang of volledig"],
       ["o", "alle oplossingen tonen of verbergen"],
       ["r", "figuren van deze slide resetten"],
       ["i", "inhoudstafel tonen of verbergen"],
@@ -1327,6 +1619,10 @@
 
   /* --- Toetsen en gebaren ---------------------------------------------- */
 
+  function scrollPodium(richting, pagina) {
+    podium.scrollBy({ top: richting * (pagina ? podium.clientHeight * 0.85 : 80) });
+  }
+
   function bindToetsen() {
     document.addEventListener("keydown", function (e) {
       if (e.ctrlKey || e.altKey || e.metaKey) return;
@@ -1344,13 +1640,24 @@
 
       switch (e.key) {
         case "ArrowRight": case " ":
-          toon(index + 1); break;
+          blader(1); break;
         case "ArrowLeft":
-          toon(index - 1); break;
-        case "ArrowDown": case "PageDown": stapVooruit(); break;
-        case "ArrowUp": case "PageUp": stapTerug(); break;
-        case "Home": toon(0); break;
-        case "End": toon(slides.length - 1); break;
+          blader(-1); break;
+        // Op een lange pagina verwacht je dat de verticale toetsen scrollen.
+        // Het podium heeft daar zelf de focus niet voor, dus doen we het hier.
+        case "ArrowDown": case "PageDown":
+          if (bladeren === "kort") stapVooruit();
+          else scrollPodium(1, e.key === "PageDown");
+          break;
+        case "ArrowUp": case "PageUp":
+          if (bladeren === "kort") stapTerug();
+          else scrollPodium(-1, e.key === "PageUp");
+          break;
+        case "Home": naarPositie(0); break;
+        case "End": naarPositie(aantalPosities() - 1); break;
+        case "k": case "K": zetBladeren("kort", true); break;
+        case "l": case "L": zetBladeren("lang", true); break;
+        case "v": case "V": zetBladeren("volledig", true); break;
         case "o": case "O": wisselAlleOplossingen(!oplossingenZichtbaar); break;
         case "r": case "R": herstelAlleFiguren(); break;
         case "i": case "I": wisselZijbalk(); break;
@@ -1386,7 +1693,7 @@
         var dx = e.changedTouches[0].clientX - startX;
         var dy = e.changedTouches[0].clientY - startY;
         if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-          toon(index + (dx < 0 ? 1 : -1));
+          blader(dx < 0 ? 1 : -1);
         }
         startX = null;
       }, { passive: true });
@@ -1400,7 +1707,7 @@
     document.addEventListener("fullscreenchange", function () {
       if (!document.fullscreenElement &&
           document.documentElement.classList.contains("pres-groot")) {
-        zetPresentatiestand(false);
+        zetPresentatiestand(false, laatsteAnker);
       }
     });
 
@@ -1423,6 +1730,7 @@
 
     maakSlides(stroom);
     if (!slides.length) return;
+    maakSecties();
     zetKruimels();
     bereidOplossingenVoor();
     volgWiskundeOplossingen();
@@ -1430,6 +1738,8 @@
     bereidGrafiekenVoor();
     bouwChroom(stroom);
     zetOverzichten();
+    volgFiguren();
+    volgScroll();
     bindToetsen();
 
     document.body.classList.add("pres-klaar");
