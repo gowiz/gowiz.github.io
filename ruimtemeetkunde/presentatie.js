@@ -1012,7 +1012,7 @@
     // een schermlezer hoort er anders niets van. Wie zelf scrolt, ziet dat al.
     if (!opties.vanScroll) {
       melding.textContent = zonderWiskunde(slide.dataset.titel) +
-        (bladeren === "kort" ? ", slide " : ", sectie ") + (p + 1) + " van " + n;
+        ", slide " + (p + 1) + " van " + n;
     }
 
     zijbalk.querySelectorAll("a[data-index]").forEach(function (a) {
@@ -1031,24 +1031,25 @@
     bewaar("slide", slide.id);
   }
 
-  // Waar de teller en de voortgangsbalk mee rekenen: slides bij kort,
-  // secties bij lang en volledig.
+  // De teller en de voortgangsbalk rekenen in elke bladerstand in slides,
+  // net als vorige en volgende.
   function positie() {
-    return bladeren === "kort" ? index : sectieVan[index];
+    return index;
   }
 
   function aantalPosities() {
-    return bladeren === "kort" ? slides.length : secties.length;
+    return slides.length;
   }
 
   function naarPositie(p) {
-    p = Math.max(0, Math.min(aantalPosities() - 1, p));
-    toon(bladeren === "kort" ? p : secties[p][0]);
+    toon(Math.max(0, Math.min(slides.length - 1, p)));
   }
 
+  // Vorige en volgende gaan in elke bladerstand per slide, zoals bij kort.
+  // Bij lang en volledig scrolt dat naar de slide, of opent de sectie ernaast.
   function blader(richting) {
-    var p = positie() + richting;
-    if (p >= 0 && p < aantalPosities()) naarPositie(p);
+    var nieuw = index + richting;
+    if (nieuw >= 0 && nieuw < slides.length) toon(nieuw);
   }
 
   function scrollNaar(element, gedrag) {
@@ -1329,7 +1330,10 @@
 
   /* --- Chroom rond het podium ------------------------------------------ */
 
-  var basisTitel = document.title;
+  // lwarp schrijft <title> bij \begin{document}; staat \title pas daarna, dan
+  // is dat de jobnaam. De kop van de titelslide heeft altijd de echte titel.
+  var titelKop = document.querySelector(".cursustitel h1");
+  var basisTitel = (titelKop && zonderWiskunde(titelKop.textContent)) || document.title;
 
   function bouwChroom(stroom) {
     var kop = kopbalk = el("header", "pres-kop");
@@ -1558,11 +1562,11 @@
     kader.appendChild(el("h2", null, "Sneltoetsen"));
     var dl = el("dl");
     [
-      ["→ · spatie", "volgende slide (kort) of sectie (lang, volledig)"],
-      ["←", "vorige slide (kort) of sectie (lang, volledig)"],
+      ["→ · spatie", "volgende slide"],
+      ["←", "vorige slide"],
       ["↓ · Page Down", "kort: volgende figuurstap, oplossing of slide; anders scrollen"],
       ["↑ · Page Up", "kort: vorige figuurstap, oplossing of slide; anders scrollen"],
-      ["Home · End", "eerste of laatste slide of sectie"],
+      ["Home · End", "eerste of laatste slide"],
       ["k · l · v", "bladeren: kort, lang of volledig"],
       ["o", "alle oplossingen tonen of verbergen"],
       ["r", "figuren van deze slide resetten"],
